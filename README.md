@@ -147,7 +147,10 @@ npm run dev
 cd frontend
 npm start
 ```
-
+5. **Start the Agent-Backend**:
+```bash
+uvicorn app.main:app --reload
+```
 
 
 ---

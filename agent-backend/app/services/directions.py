@@ -10,8 +10,16 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
     Args:
     
     """
+    print("\n\nInside the fetch_route_metadata function")
     route_metadata = []
+    cur_url = f"https://api.geoapify.com/v1/routing?waypoints="
     for i, origin in enumerate(locations):
+    #     if i == len(locations)-1:
+    #         cur_url+=f'{origin.lat},{origin.lng}'
+    #     else:
+    #         cur_url+=f'{origin.lat},{origin.lng}|'
+    # cur_url+=f"&mode=drive&apiKey={GEOAPIFY_API_KEY}"
+    
         for j, dest in enumerate(locations):
             if i != j:
                 url = (
@@ -31,6 +39,11 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
                     distance_km=distance / 1000,
                     travel_time_min=duration / 60
                 ))
+    # response = httpx.get(cur_url)
+    # response.raise_for_status()
+    # data = response.json()
+    print("\nReturning from fetch_route_metadata function")
+    # return data
     return route_metadata
 
 

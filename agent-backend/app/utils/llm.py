@@ -7,6 +7,7 @@ import itertools, threading, random, time
 from typing import Any
 from dotenv import load_dotenv
 from pydantic import Field, ConfigDict
+from pydantic import PrivateAttr
 from app.core.config import _KEYS  # noqa: F401
 
 from google.api_core.exceptions import ResourceExhausted
@@ -14,7 +15,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from langchain_core.messages import BaseMessage
-
+from langchain_core.tools import Tool
+from typing import Sequence, Any
+from langchain_core.messages import HumanMessage 
 # ───────────────────────────────────────────────────────────────────────────────
 # UI constants 
 # ───────────────────────────────────────────────────────────────────────────────
@@ -47,6 +50,10 @@ class RotatingGemini(BaseChatModel):
     model_name: str = Field(default="gemini-2.0-flash")
     temperature: float = Field(default=0.0)
     model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
+    tools: list = Field(default_factory=list)  # Add this line
+
+    # OR, if you want it private and not part of the model schema:
+    _tools: list = PrivateAttr(default_factory=list)
 
     def _generate(
         self,
@@ -56,6 +63,8 @@ class RotatingGemini(BaseChatModel):
         run_manager=None,
         **kwargs: Any,
     ) -> Any:
+        if isinstance(messages, str):
+            messages = [HumanMessage(content=messages)]
         tried: set[str] = set()
         while len(tried) < len(_KEYS):
             key = _next_key()
@@ -76,7 +85,7 @@ class RotatingGemini(BaseChatModel):
             except ResourceExhausted as e:
                 if "RATE_LIMIT" in str(e) or "quota" in str(e).lower():
                     delay = getattr(e, "retry_delay", 2)
-                    time.sleep(delay.seconds if hasattr(delay, "seconds") else 2)
+                    time.sleep(delay.seconds if hasattr(delay, "seconds") else delay if isinstance(delay, (int, float)) else 2)
                     continue
                 raise
 
@@ -94,6 +103,16 @@ class RotatingGemini(BaseChatModel):
             temperature=kwargs.get("temperature", self.temperature),
         )
 
+    def bind_tools(self, tools: Sequence[Tool]) -> "RotatingGemini":
+        """
+        Attach a list of tools to this proxy.  Returns a fresh RotatingGemini
+        whose ._generate() will delegate to ChatGoogleGenerativeAI.bind_tools().
+        """
+        inst = RotatingGemini(model_name=self.model_name, temperature=self.temperature)
+        # stash the tools on the instance
+        inst.tools = list(tools)
+        return inst
+
     # helper to make the object printable
     def __repr__(self):
         return f"<RotatingGemini model={self.model_name} active_key=***{_next_key()[-6:]}>"
@@ -101,7 +120,7 @@ class RotatingGemini(BaseChatModel):
     # optional: make pipe operator work: prompt | MODEL | parser
     def __ror__(self, other):
         from langchain_core.runnables import RunnableLambda   # lazy import
-        return RunnableLambda(lambda x: self.invoke(other | x))
+        return RunnableLambda(lambda x: self.invoke(str(x) if not isinstance(x, (str, list)) else x))
 
 
 # ───────────────────────────────────────────────────────────────────────────────

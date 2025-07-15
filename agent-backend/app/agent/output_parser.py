@@ -1,4 +1,4 @@
-from app.models.schemas import ChatResponse, ItineraryResponse
+from app.models.schemas import BudgetTable, ChatResponse, ItineraryResponse
 from typing import Dict, Any
 
 def parse_final_agent_state(agent_state: Dict[str, Any]) -> ChatResponse:
@@ -11,10 +11,14 @@ def parse_final_agent_state(agent_state: Dict[str, Any]) -> ChatResponse:
     Returns:
         ChatResponse: Structured final response for the frontend.
     """
-    itinerary_response = agent_state.get("itinerary_response")
-    verification = agent_state.get("final_verification")
+    itinerary_response = ItineraryResponse(
+        final_text=agent_state.get("chat_response") or "",
+        locations = agent_state.get("location_to_mark_on_ui") or [],
+        budget_table = agent_state.get("budget_table") or BudgetTable(total_budget=0)
+        )
+    verification = agent_state.get("verified")
 
-    if itinerary_response and verification and verification.verified:
+    if itinerary_response and verification:
         return ChatResponse(
             status="success",
             itinerary=itinerary_response
@@ -24,7 +28,7 @@ def parse_final_agent_state(agent_state: Dict[str, Any]) -> ChatResponse:
             status="failure",
             itinerary=ItineraryResponse(
                 final_text="Unable to generate a verified itinerary.",
-                ui_commands=[],
-                budget_table=[]
+                locations=[],
+                budget_table=BudgetTable(total_budget=0)
             )
         )

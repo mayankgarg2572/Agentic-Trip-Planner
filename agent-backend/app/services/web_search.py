@@ -5,11 +5,9 @@ web_search_tool = TavilySearchResults(k=3)
 
 
 def web_search_service(query: str) -> List[str]:
-    # Placeholder implementation (replace with real API integration)
-    
+    print("\n\nInside the web_search_service_function, with args:", query)
     docs = web_search_tool.invoke({"query": query})
-    web_results = "\n\n".join([d["content"] for d in docs])
-    # web_results = Document(page_content=web_results)
-
+    web_results = [d["content"] for d in docs]
+    print("\nWeb_search_service response completed")
     return web_results
 

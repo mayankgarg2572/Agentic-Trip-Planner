@@ -5,6 +5,7 @@ class Location(BaseModel):
     address: str
     lat: float
     lng: float
+    uuid: str
 
 class RouteMetadata(BaseModel):
     from_location: str
@@ -32,22 +33,19 @@ class ChatRequest(BaseModel):
     prompt: str
     existing_markers: Optional[List[Location]]
 
-class UICommand(BaseModel):
-    action: str
-    marker_id: str
-    address: str
-    lat: float
-    lng: float
-    order: int
 
 class BudgetItem(BaseModel):
     reason: str
     amount: float
 
+class BudgetTable(BaseModel):
+    total_budget:int | float
+    budget_breakdown:List[BudgetItem] = []
+
 class ItineraryResponse(BaseModel):
     final_text: str
-    ui_commands: List[UICommand]
-    budget_table: List[BudgetItem]
+    locations: List[Location]
+    budget_table: BudgetTable
 
 class VerificationResult(BaseModel):
     verified: bool

@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Any, Mapping
 from app.agent.nodes import ExtractionGenerationNode, VerificationNode
 from app.models.schemas import Location
 
@@ -18,12 +18,42 @@ class AgentState(BaseModel):
         "budget_breakdown": []
     }
     fallback_count: int = 0
+    feedback:str=""
+    verified:bool=False
+
+    def get(self, key: str, default: Any = None) -> Any:
+        """Allow dict-style .get() with a fallback."""
+        return getattr(self, key, default)
+
+    def __getitem__(self, key: str) -> Any:
+        """Allow state[key] access."""
+        try:
+            return getattr(self, key)
+        except AttributeError as e:
+            raise KeyError(key) from e
+    
+    def update(self, data: Mapping[str, Any]) -> None:
+        """
+        Allow dict-style .update({field: value, ...}),
+        setting each attribute in-place (with validation).
+        """
+        for key, value in data.items():
+            if not hasattr(self, key):
+                raise KeyError(f"{key!r} is not a valid AgentState field")
+            setattr(self, key, value)
+    
+    def __setitem__(self, key: str, value: Any) -> None:
+        # optional: reject unknown keys
+        # if key not in self.__fields__:
+        #     raise KeyError(f"{key!r} is not a valid AgentState field")
+        setattr(self, key, value)
 
 # Instantiate nodes
 extraction_generation_node = ExtractionGenerationNode()
 verification_node = VerificationNode()
 
 def verification_conditional(state: AgentState) -> str:
+    print("\n\nInside the verification_conditional condition edge function")
     if getattr(state, "verified", False):
         return "end"
     elif state.fallback_count < 2:

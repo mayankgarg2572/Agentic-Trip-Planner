@@ -1,9 +1,14 @@
 import httpx
 from typing import List
 from app.models.schemas import Location
-from app.core.config import GEOAPIFY_API_KEY
+from app.utils.helpers import generate_uuid
+import os
+from dotenv import load_dotenv
 
 def geocode_addresses(addresses: List[str]) -> List[Location]:
+    load_dotenv()
+    GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
+    print("\n\nInside geocode_addresses function")
     results = []
     for address in addresses:
         url = f"https://api.geoapify.com/v1/geocode/search?text={address}&apiKey={GEOAPIFY_API_KEY}"
@@ -13,11 +18,13 @@ def geocode_addresses(addresses: List[str]) -> List[Location]:
 
         if data['features']:
             coords = data['features'][0]['geometry']['coordinates']
-            results.append(Location(address=address, lat=coords[1], lng=coords[0]))
+            results.append(Location(address=address, lat=coords[1], lng=coords[0], uuid = generate_uuid()))
+    print("\nCompleted function geocode_addresses")
     return results
 
 
 def geocode_locations_service(locations): 
+    load_dotenv()
     """
     This function accepts a list of location dictionaries with 'name' keys,
     and returns a list of Location objects with geocoded coordinates.
@@ -28,16 +35,8 @@ def geocode_locations_service(locations):
         List[Location]: A list of Location objects with geocoded coordinates.
     """
 
-
+    print("\n\nInside geocode_locations_service function")
     addresses = [loc['name'] for loc in locations]
     geo_results = geocode_addresses(addresses)
-    location_objs = []
-    for loc, geo in zip(locations, geo_results):
-        location_objs.append(
-            Location(
-                address=geo.address,
-                lat=geo.lat,
-                lng=geo.lng
-            )
-        )
-    return location_objs
+    print("\nCompleted geocode_location_service_function")
+    return geo_results

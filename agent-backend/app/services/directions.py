@@ -4,6 +4,12 @@ from app.models.schemas import Location, RouteMetadata
 from app.core.config import GEOAPIFY_API_KEY
 
 def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
+    """
+    Fetches the best routes between every two locations provided in the locations' array
+
+    Args:
+    
+    """
     route_metadata = []
     for i, origin in enumerate(locations):
         for j, dest in enumerate(locations):
@@ -26,3 +32,5 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
                     travel_time_min=duration / 60
                 ))
     return route_metadata
+
+

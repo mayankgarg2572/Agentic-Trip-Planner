@@ -1,87 +1,101 @@
-from app.models.schemas import (
-    ChatRequest, RequiredOperations, ExtractedData, 
-    ItineraryResponse, VerificationResult
-)
-from typing import Dict, Any
+import uuid
+from app.models.schemas import Location, BudgetElement
+from app.services.geoapify import geoapify_for_location_search, geoapify_for_route_search
+from app.services.web_search import web_search
+from app.new_agent.pipeline import llm_extract_locations, llm_order_locations, llm_estimate_budget
 
-class RequirementAnalysisNode:
-    def __init__(self, llm):
-        self.llm = llm
+class ExtractionGenerationNode:
+    def __call__(self, state):
+        # user_query = state.user_query
 
-    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Analyze user prompt to determine required operations.
-        Updates state['required_operations'].
-        """
+        # # Step 1: Extract locations/entities from user query using LLM
+        # locations_info = llm_extract_locations(
+        #     user_query,
+        #     prompt="""Extract all locations, tourist spots, and accommodations mentioned or implied in the following trip planning query. 
+        #     Return a list of names and types (destination, tourist spot, accommodation). Query: {query}"""
+        # )
 
-class DataExtractionNode:
-    def __init__(self, geoapify_service, directions_service, web_search_service):
-        self.geoapify_service = geoapify_service
-        self.directions_service = directions_service
-        self.web_search_service = web_search_service
+        # # Step 2: Geocode locations using Geoapify
+        # locations = []
+        # for loc in locations_info:
+        #     geo_result = geoapify_for_location_search(loc['name'])
+        #     if geo_result:
+        #         locations.append(
+        #             Location(
+        #                 id=str(uuid.uuid4()),
+        #                 name=geo_result['address'],
+        #                 latitude=geo_result['lat'],
+        #                 longitude=geo_result['lng']
+        #             )
+        #         )
 
-    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Extract data required by itinerary node.
-        Updates state['extracted_data'].
-        """
+        # # Step 3: Order locations for route optimization using LLM
+        # ordered_names = llm_order_locations(
+        #     [loc.name for loc in locations],
+        #     prompt="""Given these locations, order them for an optimal trip route based on typical travel logic and user intent. 
+        #     Locations: {locations}"""
+        # )
+        # location_order = [loc.id for loc in locations if loc.name in ordered_names]
 
-class ItineraryGenerationNode:
-    def __init__(self, llm, web_service):
-        self.llm = llm
-        self.web_service = web_service
-        # self.fetch_expenses_service = fetch_expenses
-        # self.fetch_tourist_info_service = fetch_tourist_info
+        # # Step 4: Get routes between consecutive locations using Geoapify
+        # routes = []
+        # for i in range(len(location_order) - 1):
+        #     loc_a = next(loc for loc in locations if loc.id == location_order[i])
+        #     loc_b = next(loc for loc in locations if loc.id == location_order[i+1])
+        #     route = geoapify_for_route_search(loc_a.latitude, loc_a.longitude, loc_b.latitude, loc_b.longitude)
+        #     routes.append(route)
 
-    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Generate optimized itinerary, handle expenses and web search.
-        If invalid data detected, update state['required_operations']
-        and state['fallback_counts'] accordingly.
-        Updates state['itinerary_response'].
-        """
+        # # Step 5: Estimate budget items using LLM and web_search
+        # budget_items = []
+        # total_budget = 0
+        # for loc in locations:
+        #     budget_suggestions = llm_estimate_budget(
+        #         user_query,
+        #         loc.name,
+        #         prompt=f"""For the location '{loc.name}', estimate budget items for accommodation, food, transport, and activities. 
+        #         Return a list of item descriptions."""
+        #     )
+        #     for item in budget_suggestions:
+        #         cost = web_search(item, loc.name)  # You can refine this to use more specific queries
+        #         budget_items.append(BudgetElement(item=item, cost=cost))
+        #         total_budget += cost
 
-class ResponseVerifierNode:
-    def __init__(self, llm):
-        self.llm = llm
+        # # Step 6: Craft chat response
+        # chat_response = (
+        #     f"Trip planned for: {', '.join([loc.name for loc in locations])}. "
+        #     f"Total budget: {total_budget}."
+        # )
 
-    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Verify final itinerary response, handle retries explicitly.
-        Updates state['final_verification'] and state['fallback_counts'].
-        """
-
-
-class LocationFinderNode:
-    def __init__(self, llm, geoapify_service):
-        self.llm = llm
-        self.llm.bind_tools([geoapify_service])
-        # self.geoapify_service = geoapify_service
-
-    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Geocode addresses using Geoapify service.
-        Updates state['extracted_data']['locations'] with geocoded results.
-        """
-        addresses = state['extracted_data'].get('addresses', [])
-        prompt = "You are a location finder. Based on the provided addresses, find their geographical coordinates. Return a list of locations with latitude and longitude. Do not return any other information. For example, for 'Eiffel Tower, Paris', return {'address': 'Eiffel Tower, Paris', 'lat': 48.8584, 'lng': 2.2945}. Here are the addresses: " + ", ".join(addresses)
-        locations = self.llm.invoke(prompt)
-        state['extracted_data']['locations'] = locations
+        # # Step 7: Format state for UI
+        # state.location_to_mark_on_ui = locations
+        # state.location_order_for_showing_route_on_ui = location_order
+        # state.chat_response = chat_response
+        # state.budget_table = {
+        #     "total_budget": total_budget,
+        #     "budget_breakdown": [be.__dict__ for be in budget_items]
+        # }
+        user_query = state.get("user_query", "")
+        from app.new_agent.pipeline import node1_pipeline
+        response = node1_pipeline(user_query)
+        state.update(response)
         return state
-
-class RouteFinderNode:
-    def __init__(self, llm, directions_service):
-        self.llm = llm
-        self.llm.bind_tools([directions_service])
-        # self.directions_service = directions_service
-
-    def __call__(self, state: Dict[str, Any]) -> Dict[str, Any]:
+from app.utils.llm import MAIN_LLM
+class VerificationNode:
+    def __call__(self, state):
         """
-        Fetch routes metadata using Directions service.
-        Updates state['extracted_data']['routes'] with fetched routes.
+        Node 2: Verify the result from Node 1, set state.verified accordingly.
         """
-        locations = state['extracted_data'].get('locations', [])
-        prompt = "You are a route finder. You have access for a tool which will accept two locations. Now you will be provided with two locations. Based on those locations, find the best routes from location A to location B. Return a list of routes with details. For input:{ location A: {'Eiffel Tower, Paris', location B: 'Louvre Museum, Paris'. Your result should have format: {locations:{ A:{lat: <lat>, lng: <lng>}, B:{lat: <lat>, lng: <lng>} }, Distance_in_km:2313  , Average_Time_in_minutes:234  }   Here are the locations: " + ", ".join(locations)
-        routes = self.llm.invoke(prompt)
-        state['extracted_data']['routes'] = routes
+        # 1. Check if response matches user requirements and is not hallucinated
+        # For demo, just check if locations and budget are present
+        prompt = f"You are a response verifier from another agent. You have to just comment over the response geenrated for the user query. You have to carefully examine the solution and return just one word out of the two as 'verified' or 'not verified'. You will be provided with a object which will include all the information like the user query and the different informations generated as for example `location_order_for_showing_route_on_ui` which are in turn of helping the user to show the location visiting order for the user over the frontend UI. You don't have to judge accurately, You have to check just whether the information provided when presented in some correct format over the UI will be able to help the user or not. Here is that object:{state}"
+
+        response  =  MAIN_LLM.invoke(prompt)
+        print(response)
+        # verified = bool(state.get("location_to_mark_on_ui")) and bool(state.get("budget_table", {}).get("total_budget", 0))
+        state["verified"] = response
+        # Optionally, add feedback
+        if response == "not verified":
+            state["feedback"] = "Missing locations or budget information."
+        else:
+            state["feedback"] = "Response verified."
         return state

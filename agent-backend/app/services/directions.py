@@ -1,0 +1,28 @@
+import httpx
+from typing import List
+from app.models.schemas import Location, RouteMetadata
+from app.core.config import GEOAPIFY_API_KEY
+
+def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
+    route_metadata = []
+    for i, origin in enumerate(locations):
+        for j, dest in enumerate(locations):
+            if i != j:
+                url = (
+                    f"https://api.geoapify.com/v1/routing"
+                    f"?waypoints={origin.lat},{origin.lng}|{dest.lat},{dest.lng}"
+                    f"&mode=drive&apiKey={GEOAPIFY_API_KEY}"
+                )
+                response = httpx.get(url)
+                response.raise_for_status()
+                data = response.json()
+
+                distance = data["features"][0]["properties"]["distance"]
+                duration = data["features"][0]["properties"]["time"]
+                route_metadata.append(RouteMetadata(
+                    from_location=origin.address,
+                    to_location=dest.address,
+                    distance_km=distance / 1000,
+                    travel_time_min=duration / 60
+                ))
+    return route_metadata

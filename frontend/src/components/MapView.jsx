@@ -37,6 +37,22 @@ const MapView = () => {
     }
   }, [mapCenter, setMapCenter, setSearchResults]);
 
+    useEffect(() => {
+    fetch('https://ipapi.co/json/') 
+      .then(res => res.json())
+      .then(data => {
+        if (data.latitude && data.longitude) {
+          setMapCenter({ lat: data.latitude, lng: data.longitude });
+        } else {
+          // Fallback: e.g. default to [0,0]
+          setMapCenter({ lat: 0, lng: 0 });
+        }
+      })
+      .catch(() => {
+        setMapCenter({ lat: 0, lng: 0 });
+      });
+  }, []);
+
   return <div id="map" style={{ height: '100%', width: '100%' }} />;
 };
 

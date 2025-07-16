@@ -1,29 +1,16 @@
 import React, {useState, useContext} from 'react'
 import { MapContext } from '../context/MapContext'
 import api from '../api/api'
-// import { fetchNominationResults } from '../utils/mapUtils'
 
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
 import 'leaflet-control-geocoder';
-
+import classes from './CustomSearchBar.module.css'
 
 
 const CustomSearchBar = () => {
     const [query, setQuery] = useState('')
     const {setSearchResults, searchResults} = useContext(MapContext)
-    
-      // const geocoderControl = L.Control.geocoder({ defaultMarkGeocode: false })
-      //   .on('markgeocode', async (e) => {
-      //     const { name, center } = e.geocode;
-
-      //     const nominatimResults = e.geocode ? [{
-      //       address: name,
-      //       lat: center.lat,
-      //       lng: center.lng,
-      //       source: 'Nominatim'
-      //     }] : [];
 
     const fetchNominationResults = async (query) => {
     const endpoint = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
@@ -61,10 +48,6 @@ const CustomSearchBar = () => {
         if(!query.trim()) return ;
         console.log("INSIDE THE handleSearch with query:", query)
         try{
-            // const [ geoapifyResponse] = await Promise.all([
-            //     // fetchNominationResults(query),
-            //     api.searchLocationMultiple(query)
-            // ])
             const [nominatimResults,  geoapifyResponse] = await Promise.all([
                 fetchNominationResults(query),
                 api.searchLocationMultiple(query)
@@ -74,9 +57,7 @@ const CustomSearchBar = () => {
                 source: 'Geoapify'
             }))
             console.log("results, geo:", geoapifyResults, "\n\n\n Nomination:", nominatimResults)
-            // console.log("results, geo:", geoapifyResults)
             setSearchResults([...nominatimResults, ...geoapifyResults])
-            // setSearchResults([ ...geoapifyResults])
         }
         catch(err){
             console.error('Search error:', err)
@@ -87,7 +68,7 @@ const CustomSearchBar = () => {
         }
     } 
   return (
-    <div style={{position: 'absolute', top: 10, left:80, zIndex: 1000}} >
+    <div className={classes.serachBarForm} >
         <input 
             value =  {query}
             onChange = {(e) => setQuery(e.target.value)}

@@ -53,11 +53,10 @@ extraction_generation_node = ExtractionGenerationNode()
 verification_node = VerificationNode()
 
 def verification_conditional(state: AgentState) -> str:
-    print("\n\nInside the verification_conditional condition edge function")
+    print("\n\nInside the verification_conditional condition edge function, with fallback count:",state.fallback_count)
     if getattr(state, "verified", False):
         return "end"
     elif state.fallback_count < 2:
-        state.fallback_count += 1
         return "retry_extraction_generation"
     else:
         return "end"

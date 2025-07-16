@@ -58,7 +58,6 @@ class RotatingGemini(BaseChatModel):
     def _generate(
         self,
         messages: list[BaseMessage] | str,
-        *,
         stop: Any | None = None,
         run_manager=None,
         **kwargs: Any,
@@ -103,24 +102,11 @@ class RotatingGemini(BaseChatModel):
             temperature=kwargs.get("temperature", self.temperature),
         )
 
-    def bind_tools(self, tools: Sequence[Tool]) -> "RotatingGemini":
-        """
-        Attach a list of tools to this proxy.  Returns a fresh RotatingGemini
-        whose ._generate() will delegate to ChatGoogleGenerativeAI.bind_tools().
-        """
-        inst = RotatingGemini(model_name=self.model_name, temperature=self.temperature)
-        # stash the tools on the instance
-        inst.tools = list(tools)
-        return inst
 
     # helper to make the object printable
     def __repr__(self):
         return f"<RotatingGemini model={self.model_name} active_key=***{_next_key()[-6:]}>"
 
-    # optional: make pipe operator work: prompt | MODEL | parser
-    def __ror__(self, other):
-        from langchain_core.runnables import RunnableLambda   # lazy import
-        return RunnableLambda(lambda x: self.invoke(str(x) if not isinstance(x, (str, list)) else x))
 
 
 # ───────────────────────────────────────────────────────────────────────────────

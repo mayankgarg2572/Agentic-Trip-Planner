@@ -26,9 +26,5 @@ def parse_final_agent_state(agent_state: Dict[str, Any]) -> ChatResponse:
     else:
         return ChatResponse(
             status="failure",
-            itinerary=ItineraryResponse(
-                final_text="Unable to generate a verified itinerary.",
-                locations=[],
-                budget_table=BudgetTable(total_budget=0)
-            )
+            itinerary=itinerary_response
         )

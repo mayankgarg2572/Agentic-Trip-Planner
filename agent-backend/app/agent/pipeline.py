@@ -8,22 +8,33 @@ import json
 from app.agent.prompts import (
     LOCATION_EXTRACTION_PROMPT,
     ROUTE_ORDER_PROMPT,
-    BUDGET_ESTIMATION_PROMPT
+    BUDGET_ESTIMATION_PROMPT,
+    TIME_OPENING_FINDER,
+    ROUTE_RECOMMENDATION_PROMPT
 )
+from typing import Any, Dict, List
 
 
-def extract_locations(user_query: str):
-    print("\n\nInside the extract_locations function")
-    web_search_tool = Tool.from_function(
-        web_search_service,
-        name="web_search",
-        description="Search the web for up-to-date information about locations, travel tips, and other relevant data."
-    )
-    llm = MAIN_LLM.bind_tools([web_search_tool])
-    prompt = LOCATION_EXTRACTION_PROMPT + f"\nUser query: {user_query}\nIf you need more info about a place, use the web_search tool."
-    result = llm.invoke(prompt)
-    # Parse result as list of dicts [{"name": ..., "type": ...}]
-    content = result.content
+def llm_with_web_search(prompt, llm, max_loops=3):
+    final_content = ""
+    for _ in range(max_loops):
+        result = llm.invoke(prompt)
+        print(f"\n\nInside llm_with_web_searchResult:\n\n{result.content}")
+        content = result.content if hasattr(result, "content") else str(result)
+        content = content.strip()
+        if content.startswith("search:"):
+            content = content.replace('"', '').replace("'", '')
+            search_query = content[len("search:"):].strip()
+            # also need to remove the things like " or ' or from the content
+            search_results = web_search_service(search_query)
+            prompt += f"\n\nWeb search results for '{search_query}': {search_results}\nNow, based on this, continue."
+        elif content.startswith("final_response:"):
+            return content[len("final_response:"):].strip()
+        else:
+            return content
+    return "Error: Too many search loops."
+
+def remove_json_prefix_list(content: str) -> List[Any]:
     if isinstance(content, str):
         content = content.strip()
         if content.startswith("```json"):
@@ -34,68 +45,51 @@ def extract_locations(user_query: str):
             content = content[:-len("```")].strip()
         try:
             locations = json.loads(content)
+            return locations
         except Exception:
-            locations = []
+            return []
     elif isinstance(content, list):
-        locations = content
+        return content
     else:
-        locations = []
-    print("\nCompleted extract_location function")
+        return []
+
+
+def extract_locations(user_query: str):
+    print("\n\nInside the extract_locations function")
+    llm = MAIN_LLM  # No need to bind tools
+    prompt = (
+        LOCATION_EXTRACTION_PROMPT +
+        f"\nUser query: {user_query}\n"
+    )
+    content = llm_with_web_search(prompt, llm)
+    locations = remove_json_prefix_list(content)
+    
+    print("\nCompleted extract_location function, with final locations:", locations)
     return locations
 
 def extract_suitable_time(user_query: str, locations: list[dict]) -> str:
-    """
-    Extract suitable travel times for tourist spots as asked in the user query.
-    Args:
-        user_query (str): The user's query asking for travel times.
-        locations (list[dict]): List of locations to consider.
-    Returns:
-        str: A string with suitable travel times for the tourist spots.
-    """
     print("\n\nInside the extract_suitable_time function")
-    web_search_tool = Tool.from_function(
-        web_search_service,
-        name="web_search",
-        description="Search the web for up-to-date information about locations, travel tips, and other relevant data."
-    )
-    llm = MAIN_LLM.bind_tools([web_search_tool])
-    format  = "[{location_name: 'sample_location', suitable_time:'10::00AM - 12:30PM,3:30PM-5:30PM'}]"
-    prompt = "Extract suitable travel times for tourist spots as asked in the user query:" + f"{user_query} from the locations: {locations}. Here a lot of location are provided, just choose which are suitable as per the user query like tourist spots etc..\n\n\nUse web_search if you need to know best times or travel tips. Provide the final result in JSON only in the format as below:{format}" 
-    
-    result = llm.invoke(prompt)
+
+    llm = MAIN_LLM
+    prompt = TIME_OPENING_FINDER + "\n\nUser query:" + f"{user_query}\n\nLocations: {locations}."
+
+    result = llm_with_web_search(prompt, llm)
     print("\nCompleted extract_suitable_time function call")
-    return str(result.content) if result.content is not None else ""
+    timings = remove_json_prefix_list(result)
+    return str(timings) if timings is not None else ""
 
 
 
 def order_locations(location_objs, routes, suitable_time_opening, user_query):
     print("\n\nInside the order_locations function call")
-    web_search_tool = Tool.from_function(
-        web_search_service,
-        name="web_search",
-        description="Search the web for up-to-date information about locations, travel tips, and other relevant data."
-    )
-    llm = MAIN_LLM.bind_tools([web_search_tool])
+    llm = MAIN_LLM
     names = [loc.address for loc in location_objs]
-    prompt = ROUTE_ORDER_PROMPT + f"\nUser query: {user_query}\n\nLocations: {names}\n\n Routes General info between different Locations:{routes}\n\nSuitable opening times: {suitable_time_opening}\n\nUse web_search if you need to know best order or travel tips."
+    prompt = ROUTE_ORDER_PROMPT + f"\n\nUser query: {user_query}\n\nLocations: {names}\n\nRoutes General info between different Locations:{routes}\n\nSuitable opening times of tourists spots: {suitable_time_opening}"
     result = llm.invoke(prompt)
-    content = result.content
-    if isinstance(content, str):
-        content = content.strip()
-        if content.startswith("```json"):
-            content = content[len("```json"):].strip()
-        if content.startswith("```"):
-            content = content[len("```"):].strip()
-        if content.endswith("```"):
-            content = content[:-len("```")].strip()
-        try:
-            ordered_names = json.loads(content)
-        except Exception:
-            ordered_names = []
-    elif isinstance(content, list):
-        ordered_names = content
-    else:
-        ordered_names = []
+
+    result = llm_with_web_search(prompt, llm)
+    ordered_names = remove_json_prefix_list(result)
+    
     ordered = [loc for name in ordered_names for loc in location_objs if loc.address == name]
     print("\nCompleted order_locations function call")
     return ordered
@@ -104,35 +98,14 @@ def order_locations(location_objs, routes, suitable_time_opening, user_query):
 
 def estimate_budget(user_query, location_objs):
     print("\n\nInside estimate_budget function call")
-    web_search_tool = Tool.from_function(
-        web_search_service,
-        name="web_search",
-        description="Search the web for up-to-date information about locations, travel tips, and other relevant data."
-    )
-    llm = MAIN_LLM.bind_tools([web_search_tool])
+
+    llm = MAIN_LLM
     budget_items = []
     total_budget = 0
     for loc in location_objs:
-        prompt = BUDGET_ESTIMATION_PROMPT + f"\nLocation: {loc.address}\nUser query: {user_query}\nUse web_search for up-to-date prices and recommendations."
-        result = llm.invoke(prompt)
-        # items = items.content
-        content = result.content
-        if isinstance(content, str):
-            content = content.strip()
-            if content.startswith("```json"):
-                content = content[len("```json"):].strip()
-            if content.startswith("```"):
-                content = content[len("```"):].strip()
-            if content.endswith("```"):
-                content = content[:-len("```")].strip()
-            try:
-                items = json.loads(content)
-            except Exception:
-                items = []
-        elif isinstance(content, list):
-            items = content
-        else:
-            items = []
+        prompt = BUDGET_ESTIMATION_PROMPT + f"\n\nLocation: {loc.address}\n\nUser query: {user_query}"
+        result = llm_with_web_search(prompt, llm)
+        items = remove_json_prefix_list(result)
         for item in items:
             reason = getattr(item, 'item', item.get('item') if isinstance(item, dict) else None)
             if reason is None:
@@ -156,7 +129,7 @@ def node1_pipeline(user_query: str):
 
     # 2. Geocode locations
     location_objs = geocode_locations_service(locations_info)
-
+    
     # 3. Fetch routes
     routes = fetch_routes_metadata(location_objs)
 
@@ -166,7 +139,7 @@ def node1_pipeline(user_query: str):
     # 5. Estimate budget (LLM + web_search)
     budget_items, total_budget = estimate_budget(user_query, ordered_locations)
 
-    prompt = f"For the provided user query:{user_query}, the information generated for the user is Location's info:{locations_info}\n\n Final Ordered Route:{ordered_locations} Estimated Budget:{budget_items}. Support how well the generated response able to answer the asked query. Explain the generated information in respect of user's query."
+    prompt = ROUTE_RECOMMENDATION_PROMPT + f"\n\nUser query:{user_query},\n\nThe different Location's info as related to the user query are:{locations_info}\n\nFinal Ordered Route:{ordered_locations}\n\nEstimated Budget:{budget_items}."
     final_chat_response = MAIN_LLM.invoke(prompt)
 
     # 6. Format response

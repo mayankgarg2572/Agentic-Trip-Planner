@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react'
 import api from '../api/api'
 import { MapContext } from '../context/MapContext'
 
+import classes from './SearchBar.module.css'
 const SearchBar = () => {
     const [address, setAddress] =  useState('')
     const { setMapCenter } = useContext( MapContext );
@@ -21,7 +22,7 @@ const SearchBar = () => {
         // Pass the result to MapView by context ad state management
     }
   return (
-    <form style={{ position: 'absolute', top: 10, left: 10, zIndex: 1000 }} onSubmit={handleSearch}>
+    <form style={classes.serachBarForm} onSubmit={handleSearch}>
         <input 
             id='searchInput'
             name ='address'

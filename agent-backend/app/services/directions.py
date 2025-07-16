@@ -27,18 +27,23 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
                     f"?waypoints={origin.lat},{origin.lng}|{dest.lat},{dest.lng}"
                     f"&mode=drive&apiKey={GEOAPIFY_API_KEY}"
                 )
-                response = httpx.get(url)
-                response.raise_for_status()
-                data = response.json()
+                try:
+                    response = httpx.get(url)
+                    response.raise_for_status()
+                    data = response.json()
 
-                distance = data["features"][0]["properties"]["distance"]
-                duration = data["features"][0]["properties"]["time"]
-                route_metadata.append(RouteMetadata(
-                    from_location=origin.address,
-                    to_location=dest.address,
-                    distance_km=distance / 1000,
-                    travel_time_min=duration / 60
-                ))
+                    distance = data["features"][0]["properties"]["distance"]
+                    duration = data["features"][0]["properties"]["time"]
+                    route_metadata.append(RouteMetadata(
+                        from_location=origin.address,
+                        to_location=dest.address,
+                        distance_km=distance / 1000,
+                        travel_time_min=duration / 60
+                    ))
+                except Exception as e:
+                    print(f"For origin:{origin},\nand destination:{dest}\ngetting error:",e )
+                    # raise e
+                    
     # response = httpx.get(cur_url)
     # response.raise_for_status()
     # data = response.json()

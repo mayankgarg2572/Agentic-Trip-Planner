@@ -1,0 +1,40 @@
+.chatAgentContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  padding: 10px;
+}
+
+.chatHistoryScroll {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 350px;
+  margin-bottom: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.chatList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chatList li {
+  padding: 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.chatList li.selected {
+  background: #e0e0e0;
+  font-weight: bold;
+}
+
+.chatForm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

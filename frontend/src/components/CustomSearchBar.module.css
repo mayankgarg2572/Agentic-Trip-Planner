@@ -1,0 +1,6 @@
+.serachBarForm{
+    position: absolute;
+    top: 1vw;
+    left: 45vh;
+    z-index: 1000
+}

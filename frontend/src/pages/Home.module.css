@@ -1,0 +1,29 @@
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+.mapSection {
+  flex: 1;
+  position: relative;
+}
+
+.sidebar {
+  position: relative;
+  background: #fff;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+  transition: width 0.2s;
+  min-width: 300px;
+  max-width: 800px;
+}
+
+.resizer {
+  cursor: col-resize;
+  width: 5px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #ccc;
+  z-index: 100;
+}

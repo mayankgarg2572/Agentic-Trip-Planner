@@ -7,25 +7,25 @@ Instructions:
 - Identify every place the user wants to visit, stay, or see.
 - For each, specify its type: "destination", "tourist_spot", or "accommodation".
 - Ignore irrelevant locations.
-- If you are not sure about the location, use the web_search tool to get the information.
-- If you want to use the web_search tool, output: search: <your_query_text>.
+- If you are not sure about the location, use the website search tool to get the information.
+- If you want to use the website search tool, output: search: <your_query_text>.
 - When you are ready to answer, output: final_response: <your answer in JSON>.
 - The final_response answer will be a JSON list of objects: [{"name": "...", "type": "..."}]
 - Output ONLY ONE of the following per response: either 'search: <query>' OR 'final_response: <JSON>'.
 - Never output both at the same time.
-- Just when you are outputting the final_response then only provide in json else in case of web_search just provide the searchable string for web search as in the above mentioned format.  
-- You can use web_search at most 2 times so craft the web_query carefully.
+- Just when you are outputting the final_response then only provide in json else in case of search just provide the searchable string for web search as in the above mentioned format.  
+- You can use web search at most 2 times so craft the query for web search carefully.
 
 Example:
 User query: "Plan a trip from Delhi to Srinagar, visiting Dal Lake and Mughal Gardens, and suggest a good hotel near Lal Chowk."
 Output(You can choose only one of the format provided below as per your requirement):
-web_search: "Complete address of Dal Lake in Srinagar"
+search: "Complete address of Dal Lake in Srinagar"
 or
-web_search: "Complete address of Mughal Gardens, Srinagar"
+search: "Complete address of Mughal Gardens, Srinagar"
 or
-web_search: "Complete address of Dal Lake in Srinagar and nearby hotels in Lal Chowk, Srinagar"
+search: "Complete address of Dal Lake in Srinagar and nearby hotels in Lal Chowk, Srinagar"
 or
-web_search: "Complete address of Hotel Gulab Bagh in Lal Chowk, Srinagar"
+search: "Complete address of Hotel Gulab Bagh in Lal Chowk, Srinagar"
 or
 If want to give the final_response, then:
 final_response:
@@ -38,7 +38,8 @@ final_response:
 ]
 
 Tips:
-- Be exhaustive but precise.
+- Be exhaustive but precise,.
+- Limit to your web search to max 3 times. Combine more than one question or asks in single query to reduce number of web search call. This is a must condition.
 - Use full names and context from the query.
 - Just provide a list of locations, no descriptions or explanations. Return the result in the specified format only. Either in json for final_response or string for web_search.
 """
@@ -53,22 +54,22 @@ Instructions:
 - You will be provided with a list of locations and a user query.
 - Identify which locations are tourist spots or places the user wants to visit.
 - For each relevant location, find the best or most suitable opening/visiting times.
-- If you are not sure about the timings, use the web_search tool to get the information.
-- If you want to use the web_search tool, output: search: <your_query_text>.
+- If you are not sure about the timings, use the website search tool to get the information.
+- If you want to use the website search tool, output: search: <your_query_text>.
 - When you are ready to answer, output: final_response: <your answer in JSON>.
 - The final_response answer must be a JSON list of objects: [{"location_name": "...", "suitable_time": "..."}]
 - Output ONLY ONE of the following per response: either 'search: <query>' OR 'final_response: <JSON>'.
 - Never output both at the same time.
-- When outputting final_response, provide only the JSON list as specified. For web_search, provide only the search string.
+- When outputting final_response, provide only the JSON list as specified. For search, provide only the search string.
 
 Example:
 User query: "What are the best times to visit Dal Lake and Mughal Gardens during my trip?"
 Locations: ["Dal Lake", "Mughal Gardens", "Hotel Gulab Bagh"]
 
 Output (choose only one format as per requirement):
-web_search: "Opening hours and best visiting times for Dal Lake, Srinagar"
+search: "Opening hours and best visiting times for Dal Lake, Srinagar"
 or
-web_search: "Best time to visit Mughal Gardens, Srinagar"
+search: "Best time to visit Mughal Gardens, Srinagar"
 or
 final_response:
 [
@@ -78,6 +79,7 @@ final_response:
 
 Tips:
 - Be exhaustive but precise.
+- Limit to your web search to max 3 times. Combine more than one question or asks in single query to reduce number of web search call. This is a must condition.
 - Use full names and context from the query and location list.
 - Only provide suitable times for locations relevant to the user's trip.
 - Return the result in the specified format only: either JSON for final_response or string for web_search.
@@ -93,19 +95,19 @@ Instructions:
 - Consider user intent, travel time, and logical sequence.
 - If the user specifies a start/end, respect it.
 - If you are not sure about the best order, use the web_search tool to get the information.
-- If you want to use the web_search tool, output: search: <your_query_text>.
+- If you want to use the website search tool, output: search: <your_query_text>.
 - When you are ready to answer, output: final_response: <your answer in JSON>.
 - The final_response answer must be a JSON array of location names in order.
 - Output ONLY ONE of the following per response: either 'search: <query>' OR 'final_response: <JSON>'.
 - Never output both at the same time.
-- When outputting final_response, provide only the JSON array as specified. For web_search, provide only the search string.
+- When outputting final_response, provide only the JSON array as specified. For doing web-based search, provide only the search string.
 
 Example:
 Locations: ["Delhi", "Srinagar", "Dal Lake", "Mughal Gardens"]
 User wants to start from Delhi and visit all places.
 
 Output (choose only one format as per requirement):
-web_search: "Best route order for visiting Delhi, Srinagar, Dal Lake, and Mughal Gardens"
+search: "Best route order for visiting Delhi, Srinagar, Dal Lake, and Mughal Gardens"
 or
 final_response:
 ["Delhi", "Srinagar", "Dal Lake", "Mughal Gardens"]
@@ -113,8 +115,10 @@ final_response:
 Tips:
 - Minimize travel time and backtracking.
 - Group nearby spots together.
+- Limit to your web search to max 3 times. Combine more than one question or asks in single query to reduce number of web search call. This is a must condition.
 - Use full names and context from the query and location list.
 - Return the result in the specified format only: either JSON for final_response or string for web_search.
+- Results from your earlier searches will be added to this current prompt only so use them wisely and hence can limit the no. of web search tool as well. 
 """
 
 BUDGET_ESTIMATION_PROMPT = """
@@ -125,18 +129,18 @@ Task: For each location, estimate costs for accommodation, food, transport, and 
 Instructions:
 - Use realistic, region-specific prices.
 - If you are not sure about the costs, use the web_search tool to get the information.
-- If you want to use the web_search tool, output: search: <your_query_text>.
+- If you want to use the website search tool, output: search: <your_query_text>.
 - When you are ready to answer, output: final_response: <your answer in JSON>.
 - The final_response answer must be a JSON list: [{"item": "...", "cost": ...}]
 - Output ONLY ONE of the following per response: either 'search: <query>' OR 'final_response: <JSON>'.
 - Never output both at the same time.
-- When outputting final_response, provide only the JSON list as specified. For web_search, provide only the search string.
+- When outputting final_response, provide only the JSON list as specified. For web based search, provide only the search string.
 
 Example:
 Location: "Srinagar"
 
 Output (choose only one format as per requirement):
-web_search: "Average accommodation, food, transport, and activity costs in Srinagar"
+search: "Average accommodation, food, transport, and activity costs in Srinagar"
 or
 final_response:
 [
@@ -149,8 +153,9 @@ final_response:
 Tips:
 - If user mentions budget, respect their constraints.
 - Use web search for up-to-date prices if possible.
+- Limit your web search to max 3 times. Combine more than one question or asks in single query to reduce number of web search call, it is a must condition.
 - Be exhaustive but precise.
-- Return the result in the specified format only: either JSON for final_response or string for web_search.
+- Return the result in the specified format only: either JSON for final_response or string for web-based search.
 """
 
 
@@ -183,5 +188,5 @@ Variables to use (provided at the end of the prompt):
 - ordered_locations: The final ordered route for the trip.
 - budget_items: The estimated budget breakdown for the trip.
 
-Now, using the above instructions and variables, craft your recommendation for the user.
+Now, using the above instructions and following variables, craft your recommendation for the user.
 """

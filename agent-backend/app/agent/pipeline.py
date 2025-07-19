@@ -15,8 +15,8 @@ from app.agent.prompts import (
 from typing import Any, Dict, List
 
 
-def llm_with_web_search(prompt, llm, max_loops=3):
-    final_content = ""
+def llm_with_web_search(prompt, llm, max_loops=2):
+    final_content = [""]
     for _ in range(max_loops):
         result = llm.invoke(prompt)
         print(f"\n\nInside llm_with_web_searchResult:\n\n{result.content}")
@@ -27,12 +27,14 @@ def llm_with_web_search(prompt, llm, max_loops=3):
             search_query = content[len("search:"):].strip()
             # also need to remove the things like " or ' or from the content
             search_results = web_search_service(search_query)
+            final_content+=search_results
             prompt += f"\n\nWeb search results for '{search_query}': {search_results}\nNow, based on this, continue."
         elif content.startswith("final_response:"):
             return content[len("final_response:"):].strip()
         else:
             return content
-    return "Error: Too many search loops."
+    print("Not able to complete the web search too much calls, returining:", final_content)
+    return " ".join(final_content)
 
 def remove_json_prefix_list(content: str) -> List[Any]:
     if isinstance(content, str):

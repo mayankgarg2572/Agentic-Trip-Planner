@@ -105,7 +105,7 @@ python -m uvicorn app.main:app --reload
 
 
 ## Project Structure
-
+```text
 Directory structure:
 ├── README.md
 ├── test_trips.txt
@@ -185,7 +185,7 @@ Directory structure:
         │   └── App.css
         └── utils/
             └── mapUtils.js
-
+```text
 
 
 ## Usage Flow & Agent Design

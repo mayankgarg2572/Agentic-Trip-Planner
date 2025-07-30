@@ -54,6 +54,7 @@ class VerificationResult(BaseModel):
 class ChatResponse(BaseModel):
     status: str
     itinerary: ItineraryResponse
+    api_result_itineraries: object | None
 
 class ExtractedData(BaseModel):
     locations: List[Location]

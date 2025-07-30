@@ -20,6 +20,7 @@ class AgentState(BaseModel):
     fallback_count: int = 0
     feedback:str=""
     verified:bool=False
+    api_result_itineraries:object=None
 
     def get(self, key: str, default: Any = None) -> Any:
         """Allow dict-style .get() with a fallback."""

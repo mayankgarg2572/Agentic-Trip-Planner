@@ -12,13 +12,7 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
     """
     print("\n\nInside the fetch_route_metadata function")
     route_metadata = []
-    cur_url = f"https://api.geoapify.com/v1/routing?waypoints="
     for i, origin in enumerate(locations):
-    #     if i == len(locations)-1:
-    #         cur_url+=f'{origin.lat},{origin.lng}'
-    #     else:
-    #         cur_url+=f'{origin.lat},{origin.lng}|'
-    # cur_url+=f"&mode=drive&apiKey={GEOAPIFY_API_KEY}"
     
         for j, dest in enumerate(locations):
             if i != j:
@@ -42,13 +36,32 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
                     ))
                 except Exception as e:
                     print(f"For origin:{origin},\nand destination:{dest}\ngetting error:",e )
-                    # raise e
                     
-    # response = httpx.get(cur_url)
-    # response.raise_for_status()
-    # data = response.json()
     print("\nReturning from fetch_route_metadata function")
-    # return data
     return route_metadata
 
+
+def fetch_complete_itinerary(locations: List[Location]) -> object:
+    """
+    Fetches the complete itineraries
+    """
+    print("\n\nInside the fetch_complete_itinerary function")
+    cur_url = f"https://api.geoapify.com/v1/routing?waypoints="
+    for i, origin in enumerate(locations):
+        if i == len(locations)-1:
+            cur_url+=f'{origin.lat},{origin.lng}'
+        else:
+            cur_url+=f'{origin.lat},{origin.lng}|'
+    cur_url+=f"&mode=drive&apiKey={GEOAPIFY_API_KEY}"
+    
+    try:
+        response = httpx.get(cur_url)
+        response.raise_for_status()
+        data = response.json()
+        
+    except Exception as e:
+        print(f"For complete itineraries finding, getting error:",e )
+        return None
+    print("Completed result from geoApify Complete Itineraries Route.\n\n")
+    return data
 

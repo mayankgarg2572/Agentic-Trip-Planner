@@ -33,7 +33,7 @@ const MapView = () => {
         };
       });
     } else if (mapCenter.lat && mapCenter.lng) {
-      mapRef.current.setView([mapCenter.lat, mapCenter.lng], 21);
+      mapRef.current.setView([mapCenter.lat, mapCenter.lng], 13);
     }
   }, [mapCenter, setMapCenter, setSearchResults]);
 

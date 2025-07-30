@@ -20,11 +20,13 @@ def geocode_addresses(addresses: List[str]) -> List[Location]:
             response.raise_for_status()
         except Exception as e:
             print("Getting error in extracting location coordi, for location:", address, "\nError is:", e)
+            continue
 
         if data and data['features']:
             coords = data['features'][0]['geometry']['coordinates']
             results.append(Location(address=address, lat=coords[1], lng=coords[0], uuid = generate_uuid()))
         else:
+            print("Not able to extract location coordi, for location:", address, "\nThe api(extract_location_coordinate) response was:", data)
             continue
     print("\nCompleted function geocode_addresses")
     return results

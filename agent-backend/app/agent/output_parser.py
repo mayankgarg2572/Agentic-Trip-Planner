@@ -17,14 +17,16 @@ def parse_final_agent_state(agent_state: Dict[str, Any]) -> ChatResponse:
         budget_table = agent_state.get("budget_table") or BudgetTable(total_budget=0)
         )
     verification = agent_state.get("verified")
-
+    api_result_itineraries =  agent_state.get("api_result_itineraries")
     if itinerary_response and verification:
         return ChatResponse(
             status="success",
-            itinerary=itinerary_response
+            itinerary=itinerary_response,
+            api_result_itineraries=api_result_itineraries
         )
     else:
         return ChatResponse(
             status="failure",
-            itinerary=itinerary_response
+            itinerary=itinerary_response,
+            api_result_itineraries=api_result_itineraries
         )

@@ -1,158 +1,258 @@
-# Getting Started
+# Trip Planner AI — Agentic Trip Planning Platform
 
-This project is a AI-Agetic Trip Planner built using React, NodeJS, and FastAPI. It allows users to plan trips with the help of AI agents, providing a seamless and interactive experience. This is not yet a complete project, but it is a work in progress.
+An AI‑Agentic Trip Planner built with **React**, **NodeJS**, and **FastAPI**.  
+Users can search destinations, view map-based results, and interact with an AI travel assistant to plan optimal routes, estimate budgets, and discover accommodations and tourist spots.
 
-The React UI is encompassing currently the interaction with the shown map. Users can search for the location and will see the result in left side panel. The right side panel is reserved for the AI agent interaction, which is not yet implemented. 
+---
 
-The NodeJS backend is functional and serves the GeoApify API for the searching operation in the React UI. It also saves whaterver the user searches in the mongoDB database. The NodeJS backend is currently running on port 5000.
+## Table of Contents
+1. [Features](#features)
+2. [Architecture Overview](#architecture-overview)
+3. [Installation & Setup](#installation--setup)
+4. [Quick Start](#quick-start)
+5. [Project Structure](#project-structure)
+6. [Usage Flow & Agent Design](#usage-flow--agent-design)
+7. [Output Format & Agent State Design](#output-format--agent-state-design)
+8. [License](#license)
 
-The FastAPI backend is specifically for the Agentic implementation using LangGraph. I have planned it in the following way. Let me share with you what I have finally decided. 
+---
 
-Node 1 -> Tools : [web_search, geoapify_for_location_search, geoapify_for route_search] => It will extract all the things which are required by the user like the optimum route and the respective budget etc.. I will have a specific format for answer here. This will help me to show the respective UI interactionn over the map easil.y For e.g. If the user have asked to make a trip to some location from his current location. Then this node willl extract the locations' geopoint like the exact langitudes and latitudes using geoapify location search tool and then it will use the geoapify_route_search tool to get the optimum route from the current location to the destination location. It may then also use the web_search tool to get the budget for the trip and other things like the best time to visit that place, nearby tourist spots and their best time for visiting etc..  Here I will also extract the location of nearby tourist spots and accomodation using web search and geoapify_location_search that will help me to mark them better over my map UI highly interactive, informative and user friendly. For optimizing the route, I will use the geoapify_route_search tool which will give me the best route from the current location to the destination location. So if there are more than two location ing the route then I will first need to find shortest route from every location to every other location and then find the best complete routestarting from location A to every other location or what as recommended by the user.
+## Features
+- Interactive **React UI** with map search and dual‑panel layout  
+- **NodeJS backend** serving GeoApify API and persisting searches to MongoDB  
+- **FastAPI backend** implementing LangGraph agentic logic for travel planning  
+- Automatic extraction of geolocations, optimized routing, budgets, tourist spots, and accommodations
 
-Now let me cite the complete functionality of the Node 1:
-1. It will take the user query as input.
-2. It will use the `geoapify_for_location_search` tool to find the locations. This tool will return the locations' geopoint like the exact latitudes and longitudes and the full address of the location in words like, "Nehru Udhyaan, Laal Chowk, Srinagar, Jammu and Kashmir, India".
-3. It will use the `geoapify_for_route_search` tool to find the best route from a location A to the location B. It will only accept two locations at a time.
-4. It will use the `web_search` tool to find the budget for the trip and other things like the best time to visit that place, nearby tourist spots and their best time for visiting, accomodation, food, transport etc.
-5. It will extract the locations of nearby tourist spots and accomodation using web search and geoapify_location_search that will help me to mark them better over my map UI highly interactive, informative and user friendly.
-6. It will craft the budget for the respective trip in a specific format which will be used to show as the budget table over the UI.
-7. It will return the final response in a specific format which will be used to show the respective UI interaction over the map easily.
+---
+
+## Architecture Overview
+
+| Component     | Responsibility                                   | Key Tools                                 |
+|---------------|--------------------------------------------------|--------------------------------------------|
+| React UI      | Map + search interface, agent chat panel         | React, GeoApify JS client                  |
+| NodeJS Server | Location lookup + data persistence               | Express, MongoDB, GeoApify API             |
+| FastAPI Agent | Agentic processing for trip planning logic       | FastAPI, LangGraph, Python tools           |
+
+---
+
+## Installation & Setup
+
+### Prerequisites
+Version of tech stacks with which this project is built with
+- Python: 3.10.0 for FastAPI agent  
+- Node.js: v22.17.0
+- MongoDB account / connection URI  
+- GeoApify API key  
+- Gemini API key: Setup at least 3 Gemini API Keys(in case using Free Tier API Key) for the Agent to work without any issue as there is limit for no. of call to LLM per minute which can limit our agent. Since we are using Thread safe Rotating Gemin API key Model which will rotate API key in case one API key exhausted its limit. 
 
 
-Now let me cite the order of execution for different user requirements in the Node 1:
+### Step-by‑Step Setup
 
-1. It will first check all the user requirements like is the user interested in finding the best route also, is the user interested in finding the nearby accommodation or nearby tourist spots for a location, if the user is interested in optimizing its route, if the user is interested in budget estimation.
+#### 1. Clone the repository
+```bash
+git clone <repo-url>
+cd Trip_Planner_AI
+```
 
-2. Now it will do a web search for only things like best accomodation nearby a location, best tourist spot nearby a location, and the best time to visit the respective tourist locations which may be required for optimizing the route.
+#### 2. NodeJS Backend
+```bash
+cd backend
+cp .env.test .env
+# Edit .env: add MongoDB URI, GeoApify API key
+npm install
+npm run dev
+```
 
-3. Now after finding all the basic word like addresss of all the locations, accomodations and their tourist spots from the web search, it will use the `geoapify_for_location_search` tool to find the exact geopoint of all the locations, accomodations and tourist spots.
+#### 3. React Frontend
+```bash
+cd ../frontend
+npm install
+npm start
+```
 
-4. Now it will use the `geoapify_for_route_search` tool to do the route estimation for every location to every other location. For the tourist location location near by some major location then it will just search for the route specific to those nearby tourist spot and the major location. For e.g. the user will be visiting Srinagar and he wants to visit the nearby tourist spots like Dal Lake, Mughal Gardens, etc. So it will first find the route from the current location to Srinagar and then it will find the route from Srinagar to Dal Lake and then from Dal Lake to Mughal Gardens and so on, and then order them in a way that the route is optimized and the user can visit all the tourist spots in the best possible way. Now if the user is visiting more than one such major location and interested in visiting nearby tourist spots for each location then it will find the route from the current location to the first major location and then from the first major location to the second major location and so on. And also it will find the route for all the tourist locations from major Location A and simiarly for major location B and so on. So it is like an iterative process. For  each location and its tourist spots I might need to optimize them as a single route. similarly for the next major location and its tourist spots I might need to optimize them as a single route. And then I will optimize the route for all major locations so the user can visit all the tourist spots in the best possible way.
+#### 4. FastAPI Agent Backend
+```bash
+cd ../agent-backend
+python -m venv agentenv
+cp .env.test .env # Setup at least 3 Gemini API Keys(in case using Free Tier API Key) for the Agent to work without any issue as there is limit for no. of call to LLM per minute which can limit our agent
+agentenv/Scripts/activate
+pip install -r requirements.txt
+```
 
-5. Now it will use the `web_search` tool to find the budget for the trip including accomodation, food, transport, entry fees etc. as applicable. 
+## Quick Start
+Open 3 terminals inside the folder `Trip_Planner_AI` 
 
-6. Now it will correctly format all the information extracted above in the specific format as mentioned earlier. 
+1. Launch backend (NodeJS) on first terminal
+```bash
+cd backend
+npm run dev
+```
+
+2. Launch frontend on second terminal
+```bash
+cd ../frontend
+npm start
+```
+
+3. Launch FastAPI agent API on port 8000
+```bash
+cd ../agent-backend
+agentenv/Scripts/activate
+python -m uvicorn app.main:app --reload
+```
+
+4. Interact via React UI: search location, chat with the agent
+
+
+## Project Structure
+
+Directory structure:
+├── README.md
+├── test_trips.txt
+├── agent-backend/
+│   ├── .env.test
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── agent/
+│   │   │   ├── graph.py
+│   │   │   ├── nodes.py
+│   │   │   ├── output_parser.py
+│   │   │   ├── pipeline.py
+│   │   │   └── prompts.py
+│   │   ├── api/
+│   │   │   ├── api_v1.py
+│   │   │   └── endpoints/
+│   │   │       └── agent.py
+│   │   ├── core/
+│   │   │   └── config.py
+│   │   ├── models/
+│   │   │   └── schemas.py
+│   │   ├── services/
+│   │   │   ├── database.py
+│   │   │   ├── directions.py
+│   │   │   ├── geoapify.py
+│   │   │   └── web_search.py
+│   │   └── utils/
+│   │       ├── helpers.py
+│   │       ├── llm.py
+│   │       └── rate_limiter.py
+│   └── tests/
+│       ├── test_agent.py
+│       └── test_routes.py
+├── backend/
+│   ├── index.js
+│   ├── package.json
+│   ├── .env.test
+│   ├── config/
+│   │   └── db.js
+│   ├── controllers/
+│   │   └── locationController.js
+│   ├── models/
+│   │   └── Location.js
+│   ├── routes/
+│   │   └── locationRoutes.js
+│   └── services/
+│       └── mapService.js
+└── frontend/
+    ├── package.json
+    ├── public/
+    │   ├── index.html
+    │   ├── manifest.json
+    │   └── robots.txt
+    └── src/
+        ├── App.jsx
+        ├── App.test.js
+        ├── index.css
+        ├── index.js
+        ├── reportWebVitals.js
+        ├── setupTests.js
+        ├── api/
+        │   └── api.js
+        ├── components/
+        │   ├── ChatAgent.jsx
+        │   ├── ChatAgent.module.css
+        │   ├── CustomSearchBar.jsx
+        │   ├── CustomSearchBar.module.css
+        │   ├── MapView.jsx
+        │   ├── ResultsSidebar.jsx
+        │   └── SearchBar.jsx
+        ├── context/
+        │   └── MapContext.jsx
+        ├── pages/
+        │   ├── Home.jsx
+        │   └── Home.module.css
+        ├── styles/
+        │   └── App.css
+        └── utils/
+            └── mapUtils.js
 
 
 
-Node 2 -> It will verify the result generated by the Node 1 to check if it is following the user requirement or not and is not hallucinated(not accurate) and  if it finds the response okay it will end otherwise it may fallback to the Node 1 again. It can make max 2 fallback to Node 1. If it still find the response not okay then it will end the process with whatever generated final response.
+## Usage Flow & Agent Design
+- ### Node 1:
 
-The respective structure of the response which I am expecting from the Node 1 is as follows:
+- Tools used: web_search, geoapify_for_location_search, geoapify_for_route_search
 
+- Extracts exact coordinates, computes routes, gathers budgets, tourist spots, accommodations
+
+- Optimizes multi-stop travel itinerary iteratively
+
+- ### Node 2:
+
+- Validates Node 1’s output against user requirements
+
+- If inconsistencies or hallucinations exist, retries Node 1 up to two times
+
+- Finalizes the output for UI consumption
+
+## Output Format & Agent State Design
+
+### Output Format from Node 1:
 ```json
 {
-    "location_to_mark_on_ui": [Location()],
-    "location_order_for_showing_route_on_ui": [location_ids...],
-    "chat_response": "",
-    "budget_table": {
-        "total_budget": 0,
-        "budget_breakdown": [
-            {
-                "item": "Accommodation at Location A",
-                "cost": 0
-            },
-            {
-                "item": "Food at Location A",
-                "cost": 0
-            },
-            {
-                "item": "Transport from Location A to Location B",
-                "cost": 0
-            },
-            {
-                "item": "Activities at Location A",
-                "cost": 0
-            }
-        ]
-    }
+  "location_to_mark_on_ui": [Location()],
+  "location_order_for_showing_route_on_ui": [location_ids...],
+  "chat_response": "",
+  "budget_table": {
+    "total_budget": 0,
+    "budget_breakdown": [
+      {"item": "Accommodation at Location A", "cost": 0},
+      {"item": "Food at Location A", "cost": 0},
+      {"item": "Transport from Location A to Location B", "cost": 0},
+      {"item": "Activities at Location A", "cost": 0}
+    ]
+  }
 }
 ```
-Here `location_to_mark_on_ui` is an array of `Location` objects that will be marked on the map UI. This will contain all the location like any accomodations, nearby tourists places etc.. which are required or asked by the user.
+- `Location` objects include: `id`, `name` (full address), `latitude`, `longitude`
 
-Each `Location` object contains the id, name, latitude, and longitude of the location.
-Here the Location() is a class which will have the following attributes:
+- `location_order_for_showing_route_on_ui`: route sequence of location IDs
 
-```python
-class Location:
-    def __init__(self, name: str, latitude: float, longitude: float):
-        self.id = str(uuid.uuid4())  # Unique identifier for the location
-        self.name = name
-        self.latitude = latitude
-        self.longitude = longitude
-```
+- `chat_response` : textual reply for chat UI
 
-Here name is the full address of the location in words like, "Nehru Udhyaan, Laal Chowk, Srinagar, Jammu and Kashmir, India" and latitude and longitude are the respective coordinates of the location.
+- `budget_table`: total cost and itemized breakdown
 
-In the `location_order_for_showing_route_on_ui` array, I will have the ids of the locations in the order they should be shown on the map for the route.
 
-Now in this case what will be my Agent's state class should contain? 
-
+### Agent State Definition
 ```python
 class AgentState:
     def __init__(self):
         self.user_query = ""
-        self.location_to_mark_on_ui = [Location()]  # List of Location objects
-        self.location_order_for_showing_route_on_ui = [location_ids...]  # List of location ids
-        self.chat_response = ""  # Response to be shown in the chat UI
+        self.location_to_mark_on_ui = []             # List[Location]
+        self.location_order_for_showing_route_on_ui = []  # List[location_id]
+        self.chat_response = ""
         self.budget_table = {
-            "total_budget": 0,
-            "budget_breakdown": [BudgetElement()]  # List of budget items
+            "total_budget": 0.0,
+            "budget_breakdown": []  # List[BudgetElement]
         }
-```
 
-Now the `BudgetElement` class will have the following attributes:
-
-```python
 class BudgetElement:
     def __init__(self, item: str, cost: float):
-        self.item = item  # Description of the budget item
-        self.cost = cost  # Cost of the budget item
+        self.item = item
+        self.cost = cost
 ```
 
-I haven't yet implemented it. I was getting everytime confused for the Agent's graph structure, as I was trying to decentralize the node 1 more and more but everytime it was getting more and more complex and difficult to handle. So I have finally decided to keep it simple and have only two nodes for now.
+## License
+(IIT Kharagpur License)
 
----
-
-## Available Scripts
-
-
-Currently the React UI is working and the NodeJS backend is functional. The FastAPI backend is not yet implemented.
-
-So after cloning the repo, you can run the following commands to start the project:
-1. **Install dependencies for React UI**:
-```bash
-cd frontend
-npm install
-```
-
-2. **Setup the Node.js Backend**:
-    - Create a `.env` file in the `backend` directory by compaying content from your .env.test in the same backend folder. Then add your corresponding MongoDB URI, GeoApify API key, and OpenAI API key.
-
-    - Install dependencies:
-
-```bash
-cd backend
-npm install
-```
-
-3. **Start the Node.js Backend**:
-
-```bash
-npm run dev
-```
-
-4. **Start the React UI**:
-```bash
-cd frontend
-npm start
-```
-5. **Start the Agent-Backend**:
-```bash
-uvicorn app.main:app --reload
-```
-
-
----
-
-
+### Thank you for exploring Trip Planner AI.

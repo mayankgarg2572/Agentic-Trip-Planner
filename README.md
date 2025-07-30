@@ -60,14 +60,12 @@ cd backend
 cp .env.test .env
 # Edit .env: add MongoDB URI, GeoApify API key
 npm install
-npm run dev
 ```
 
 #### 3. React Frontend
 ```bash
 cd ../frontend
 npm install
-npm start
 ```
 
 #### 4. FastAPI Agent Backend

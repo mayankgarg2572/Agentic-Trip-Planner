@@ -251,6 +251,13 @@ class BudgetElement:
 ```
 
 ## License
-(IIT Kharagpur License)
+Copyright (c) 2025 Mayank Garg. All rights reserved.
+
+You may clone or fork this repository for personal or non-commercial reference only.
+Any public distribution, publication, rebranding, or infringement of authorship
+is prohibited unless you obtain explicit prior permission from the author.
+This includes redistributing the code under your own name or project name,
+even in modified or renamed form.
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND.
 
 ### Thank you for exploring Trip Planner AI.

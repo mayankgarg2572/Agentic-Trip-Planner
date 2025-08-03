@@ -2,13 +2,9 @@ import httpx
 from typing import List
 from app.models.schemas import Location
 from app.utils.helpers import generate_uuid
-# import os
-# from dotenv import load_dotenv
 from app.core.config import GEOAPIFY_API_KEY
 
 def geocode_addresses(addresses: List[str]) -> List[Location]:
-    # load_dotenv()
-    # GEOAPIFY_API_KEY = os.getenv("GEOAPIFY_API_KEY")
     print("\n\nInside geocode_addresses function")
     results = []
     for address in addresses:
@@ -33,7 +29,6 @@ def geocode_addresses(addresses: List[str]) -> List[Location]:
 
 
 def geocode_locations_service(locations): 
-    # load_dotenv()
     """
     This function accepts a list of location dictionaries with 'name' keys,
     and returns a list of Location objects with geocoded coordinates.

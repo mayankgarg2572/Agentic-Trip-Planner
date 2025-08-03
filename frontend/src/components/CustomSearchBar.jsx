@@ -52,10 +52,10 @@ const CustomSearchBar = () => {
                 fetchNominationResults(query),
                 api.searchLocationMultiple(query)
             ])
-            const geoapifyResults = geoapifyResponse.data.results.map(r => ({
+            const geoapifyResults = (geoapifyResponse?.data?.results ?? []).map(r => ({
                 ...r,
                 source: 'Geoapify'
-            }))
+                }));
             console.log("results, geo:", geoapifyResults, "\n\n\n Nomination:", nominatimResults)
             setSearchResults([...nominatimResults, ...geoapifyResults])
         }

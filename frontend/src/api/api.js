@@ -1,10 +1,10 @@
-// src/api/api.js
 import axios from "axios";
 
+import {API_BASE,AGENTIC_API_BASE } from './config'
 
-const API_BASE = process.env.API_BASE; // your backend URL
-const AGENTIC_API_BASE = process.envAGENTIC_API_BASE;
+
 const api = {
+
   searchLocation: (address) =>
     axios.post(`${API_BASE}/search-location`, { address }),
 
@@ -17,8 +17,9 @@ const api = {
       existing_markers: [],
     }),
     
-  searchLocationMultiple: (address) =>
-    axios.post(`${API_BASE}/search-location-multiple`, { address }),
+  searchLocationMultiple: (address) =>{
+    console.log(API_BASE)
+    axios.post(`${API_BASE}/search-location-multiple`, { address })},
 };
 
 export default api;

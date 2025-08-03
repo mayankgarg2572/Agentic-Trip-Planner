@@ -11,5 +11,6 @@ backend/package-lock.json
 
 frontend/node_modules
 frontend/package-lock.json
+frontend/.env
 
 SampleBackendFlow.txt

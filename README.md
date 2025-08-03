@@ -88,13 +88,13 @@ npm run dev
 
 2. Launch frontend on second terminal
 ```bash
-cd ../frontend
+cd frontend
 npm start
 ```
 
 3. Launch FastAPI agent API on port 8000
 ```bash
-cd ../agent-backend
+cd agent-backend
 agentenv/Scripts/activate
 python -m uvicorn app.main:app --reload
 ```

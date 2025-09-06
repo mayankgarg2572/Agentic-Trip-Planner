@@ -31,6 +31,9 @@ const ChatAgent = () => {
     }
   };
 
+
+  const { selectedLocations } = useContext(MapContext);
+ 
   return (
     <div className={classes.chatAgentContainer}>
       <h4>Chat History</h4>
@@ -53,12 +56,22 @@ const ChatAgent = () => {
       </div>
       <div className={classes.chatForm}>
         <textarea
+          id = 'usmsg'
+          name  = 'user-msg'
           rows={5}
           style={{ width: "100%" }}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Ask for itinerary"
         />
+        <div style={{ margin: "10px 0", fontSize: "0.95em", color: "#555" }}>
+          <b>Selected Locations:</b>{" "}
+          {selectedLocations && selectedLocations.length > 0
+            ? selectedLocations.map((obj)=>{
+                return obj.title
+            }).join(", ", )
+            : "None"}
+        </div>
         <button onClick={handleSend}>Send</button>
       </div>
     </div>

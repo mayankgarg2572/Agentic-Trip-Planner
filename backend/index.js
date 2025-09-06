@@ -28,7 +28,14 @@ app.use('/api', locationRoutes);
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  console.log("db for search backend is enabled")
+})
+.catch((err)=>{
+  console.log("Error in connecting to DB in search Backend:", err)
+})
+
+;
+
+app.listen(PORT, () => {
+    console.log(`Search Backend Server is running on port ${PORT}`);
   });
-});

@@ -11,11 +11,8 @@ const api = {
   saveMarkerLocation: (latitude, longitude) =>
     axios.post(`${API_BASE}/save-marker-location`, { latitude, longitude }),
 
-  getItinerary: (prompt) =>
-    axios.post(`${AGENTIC_API_BASE}/chat`, {
-      prompt,
-      existing_markers: [],
-    }),
+  getItinerary: (reqObj) =>
+    axios.post(`${AGENTIC_API_BASE}/chat`, reqObj),
     
   searchLocationMultiple: (address) =>{
     console.log(API_BASE)

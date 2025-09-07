@@ -29,9 +29,15 @@ class RequiredOperations(BaseModel):
     need_expenses: bool
     need_tourist_info: bool
 
+class userSpecifiedLocation(BaseModel):
+    title: str
+    lat: float
+    lng: float
+    # coordinates: List[str]  # List of "lat,lng" strings
+
 class ChatRequest(BaseModel):
     prompt: str
-    existing_markers: Optional[List[Location]]
+    locations_Selected: Optional[List[userSpecifiedLocation]] = []
 
 
 class BudgetItem(BaseModel):

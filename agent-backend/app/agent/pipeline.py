@@ -2,8 +2,8 @@ from app.utils.llm import MAIN_LLM
 from app.services.directions import fetch_complete_itinerary, fetch_routes_metadata
 from app.services.web_search import web_search_service
 from langchain.tools import Tool
-from app.models.schemas import BudgetItem
-from app.services.geoapify import geocode_locations_service
+from app.models.schemas import BudgetItem, userSpecifiedLocation
+from app.services.geoapify import geocode_locations_service, reverse_geocode_coordinates
 import json
 from app.agent.prompts import (
     LOCATION_EXTRACTION_PROMPT,
@@ -12,7 +12,7 @@ from app.agent.prompts import (
     TIME_OPENING_FINDER,
     ROUTE_RECOMMENDATION_PROMPT
 )
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 def llm_with_web_search(prompt, llm, max_loops=2):
@@ -126,13 +126,28 @@ def estimate_budget(user_query, location_objs):
     print("\nCompleted estimated_budget function call")
     return budget_items, total_budget
 
-def node1_pipeline(user_query: str):
+def node1_pipeline(user_query: str, user_provided_locations: Optional[List[userSpecifiedLocation]] = []):
     print("\n\nInside the node1_pipeline function call")
+
+    # 0. Extract user specified locations if any
+    if user_provided_locations and len(user_provided_locations) > 0:
+        # We will first fetch the possible location address of the provided coordinates using reverse_geocode_coordinates function
+        location_objs = reverse_geocode_coordinates(user_provided_locations)
+        # I want to add the user specified locations also to be added to the user_query  and then make a call to my llm to get the correct locations address using web search, basically I want to refine my user query
+        user_query += "Some possible address of the specified locations are: " + ", ".join([f'Loation no. {i}:  {loc.address}\n' for i, loc in enumerate(location_objs)])
+        # print("The user query after adding the user specified locations is:", user_query)
+
+    
+
+    
+
     # 1. Extract locations (LLM + web_search)
     locations_info = extract_locations(user_query)
     
     # Ensure only dict elements are passed to extract_suitable_time
     filtered_locations_info = [loc for loc in locations_info if isinstance(loc, dict)]
+
+    
     suitable_time_opening = extract_suitable_time(user_query, filtered_locations_info)
 
     # 2. Geocode locations

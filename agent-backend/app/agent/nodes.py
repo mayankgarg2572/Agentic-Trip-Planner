@@ -1,8 +1,14 @@
 class ExtractionGenerationNode:
     def __call__(self, state):
         user_query = state.get("user_query", "")
+        user_provided_locations = state.get("user_specified_locations_coords", [])
+
         from app.agent.pipeline import node1_pipeline
-        response = node1_pipeline(user_query)
+        if user_provided_locations:
+            response = node1_pipeline(user_query=user_query, user_provided_locations=user_provided_locations)
+        
+        else:
+            response = node1_pipeline(user_query)
         state.update(response)
         return state
 

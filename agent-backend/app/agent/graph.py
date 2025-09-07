@@ -1,8 +1,8 @@
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
-from typing import List, Any, Mapping
+from typing import List, Any, Mapping, Optional
 from app.agent.nodes import ExtractionGenerationNode, VerificationNode
-from app.models.schemas import Location
+from app.models.schemas import Location, userSpecifiedLocation
 
 class BudgetElement(BaseModel):
     item: str
@@ -10,6 +10,8 @@ class BudgetElement(BaseModel):
 
 class AgentState(BaseModel):
     user_query: str = ""
+    user_specified_locations_coords: Optional[List[userSpecifiedLocation]] = []
+    extracted_locations: List[str] = []
     location_to_mark_on_ui: List[Location] = []
     location_order_for_showing_route_on_ui: List[str] = []
     chat_response: str = ""

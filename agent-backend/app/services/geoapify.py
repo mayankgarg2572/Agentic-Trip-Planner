@@ -1,6 +1,6 @@
 import httpx
 from typing import List
-from app.models.schemas import Location
+from app.models.schemas import Location, userSpecifiedLocation
 from app.utils.helpers import generate_uuid
 from app.core.config import GEOAPIFY_API_KEY
 
@@ -44,3 +44,29 @@ def geocode_locations_service(locations):
     geo_results = geocode_addresses(addresses)
     print("\nCompleted geocode_location_service_function")
     return geo_results
+
+# Lets access the address of the locations specified by user using their coordinates
+def reverse_geocode_coordinates(coords: List[userSpecifiedLocation]) -> List[Location]:
+    print("\n\nInside reverse_geocode_coordinates function")
+    results = []
+    for coord in coords:
+        lat = coord.lat
+        lng = coord.lng
+        url = f"https://api.geoapify.com/v1/geocode/reverse?lat={lat}&lon={lng}&apiKey={GEOAPIFY_API_KEY}"
+        data  = {}
+        try:
+            response = httpx.get(url)
+            data = response.json()
+            response.raise_for_status()
+        except Exception as e:
+            print("Getting error in extracting location address, for coordinates:", coord, "\nError is:", e)
+            continue
+
+        if data and data['features']:
+            address = data['features'][0]['properties']['formatted']
+            results.append(Location(address=address, lat=lat, lng=lng, uuid = generate_uuid()))
+        else:
+            print("Not able to extract location address, for coordinates:", coord, "\nThe api(reverse_geocode_coordinates) response was:", data)
+            continue
+    print("\nCompleted function reverse_geocode_coordinates")
+    return results

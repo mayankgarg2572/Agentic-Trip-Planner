@@ -4,7 +4,6 @@ agent-backend/.env
 *__pycache__*
 agent-backend/.env
 
-
 backend/node_modules
 backend/.env
 backend/package-lock.json

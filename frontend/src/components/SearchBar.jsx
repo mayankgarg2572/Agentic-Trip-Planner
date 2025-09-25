@@ -16,7 +16,7 @@ const SearchBar = () => {
             setMapCenter({lat: latitude, long: longitude})
         }
         catch(err){
-            console.log(err)
+            console.error(err)
         }
         
         // Pass the result to MapView by context ad state management

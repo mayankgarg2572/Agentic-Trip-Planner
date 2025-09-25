@@ -21,9 +21,9 @@ const ChatAgent = () => {
         lat: loc.lat,
         lng: loc.lng
       })) }
-      console.log(reqObj)
+      // console.log(reqObj)
       const res = await api.getItinerary(reqObj);
-      console.log("Result from Itinery:", res);
+      // console.log("Result from Itinery:", res);
       // setResponse(res.data.itinerary.final_text);
       setSearchResults(res.data.itinerary.locations);
 

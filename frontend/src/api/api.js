@@ -15,7 +15,6 @@ const api = {
     axios.post(`${AGENTIC_API_BASE}/chat`, reqObj),
     
   searchLocationMultiple: (address) =>{
-    console.log(API_BASE)
     axios.post(`${API_BASE}/search-location-multiple`, { address })},
 };
 

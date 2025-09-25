@@ -10,7 +10,7 @@ import classes from './CustomSearchBar.module.css'
 
 const CustomSearchBar = () => {
     const [query, setQuery] = useState('')
-    const {setSearchResults, searchResults} = useContext(MapContext)
+    const {setSearchResults} = useContext(MapContext)
 
     const fetchNominationResults = async (query) => {
     const endpoint = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
@@ -30,7 +30,7 @@ const CustomSearchBar = () => {
 
         const data = await response.json();
 
-        console.log("Direct Nominatim API results obtained:", data);
+        // console.log("Direct Nominatim API results obtained:", data);
 
         return data.map(res => ({
             address: res.display_name,
@@ -46,7 +46,7 @@ const CustomSearchBar = () => {
 };
     const handleSearch =  async() => {
         if(!query.trim()) return ;
-        console.log("INSIDE THE handleSearch with query:", query)
+        // console.log("INSIDE THE handleSearch with query:", query)
         try{
             const [nominatimResults,  geoapifyResponse] = await Promise.all([
                 fetchNominationResults(query),
@@ -56,7 +56,7 @@ const CustomSearchBar = () => {
                 ...r,
                 source: 'Geoapify'
                 }));
-            console.log("results, geo:", geoapifyResults, "\n\n\n Nomination:", nominatimResults)
+            // console.log("results, geo:", geoapifyResults, "\n\n\n Nomination:", nominatimResults)
             setSearchResults([...nominatimResults, ...geoapifyResults])
         }
         catch(err){
@@ -64,7 +64,7 @@ const CustomSearchBar = () => {
             setSearchResults([])
         }
         finally{
-            console.log("results:", searchResults)
+            // console.log("results:", searchResults)
         }
     } 
   return (

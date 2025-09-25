@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef } from "react";
 import { MapContext } from "../context/MapContext";
-import api from "../api/api";
+// import api from "../api/api";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.css";
@@ -92,17 +92,17 @@ const MapView = () => {
             // Add the marker to the map
             marker.addTo(mapRef.current);
 
-            console.log("The saving object", e.latlng);
+            // console.log("The saving object", e.latlng);
 
             // Save location via API
-            const saveLocation = async () => {
-              try {
-                await api.saveMarkerLocation(e.latlng.lat, e.latlng.lng);
-              } catch (err) {
-                console.log("Issue in saving the marked Location:", err);
-              }
-            };
-            saveLocation();
+            // const saveLocation = async () => {
+            //   try {
+            //     await api.saveMarkerLocation(e.latlng.lat, e.latlng.lng);
+            //   } catch (err) {
+            //     console.error("Issue in saving the marked Location:", err);
+            //   }
+            // };
+            // saveLocation();
 
             // Return the updated locations array
             return [...prevLocations, newMarker];
@@ -119,16 +119,21 @@ const MapView = () => {
   }, [mapCenter, setMapCenter, setSearchResults]);
 
   useEffect(() => {
-    fetch("http://ip-api.com/json/")
+    fetch("https://ipapi.co/json/")  // Can use http://ip-api.co/json/ but this is not easy for deploying as it is not https. 
       .then((res) => res.json())
       .then((data) => {
+        // console.log("Data from ipapi.com :", data)
         if (data.lat && data.lon) {
           setMapCenter({ lat: data.lat, lng: data.lon });
-        } else {
+        } else if(data.latitude && data.longitude) {
+          setMapCenter({ lat: data.latitude, lng: data.longitude });
+        }
+        else{
           setMapCenter({ lat: 0, lng: 0 });
         }
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("getting error:", err, " when using API service.")
         setMapCenter({ lat: 0, lng: 0 });
       });
     // called = true;

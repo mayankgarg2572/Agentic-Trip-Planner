@@ -18,7 +18,7 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
             continue
         for j, dest in enumerate(locations):
             if i != j:
-                if dest.lat<=0  and dest.lng<=0 :
+                if dest.lat<=0  or dest.lng<=0 :
                     continue 
                 url = (
                     f"https://api.geoapify.com/v1/routing"

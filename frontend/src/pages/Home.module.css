@@ -11,7 +11,7 @@
 .sidebar {
   position: relative;
   background: #fff;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
   transition: width 0.2s;
   min-width: 300px;
   max-width: 800px;
@@ -26,4 +26,28 @@
   height: 100%;
   background-color: #ccc;
   z-index: 100;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .mapSection {
+    height: 50vh;
+    /* Adjust height for mobile */
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: unset;
+    max-width: unset;
+    height: 50vh;
+    /* Adjust height for mobile */
+  }
+
+  .resizer {
+    display: none;
+    /* Hide resizer on mobile */
+  }
 }

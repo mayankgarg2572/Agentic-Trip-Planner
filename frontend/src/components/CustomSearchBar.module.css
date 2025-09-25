@@ -1,6 +1,14 @@
-.serachBarForm{
+.serachBarForm {
     position: absolute;
     top: 1vw;
     left: 45vh;
     z-index: 1000
+}
+
+@media (max-width: 768px) {
+    .serachBarForm {
+        top: 10px;
+        left: 10px;
+        width: calc(100% - 20px);
+    }
 }

@@ -1,0 +1,23 @@
+/* Add this to ResultsSidebar inline styles or create a mobile-specific class */
+
+
+.resultSideBar{
+    position: 'absolute'; 
+    left: 0;
+    top: 0;
+    height: '100%';
+    width: '300px'; 
+    background: '#fff';
+    overflow-y: 'auto'; 
+    z-index: 1000 
+}
+@media (max-width: 768px) {
+    .resultsSidebar {
+        width: 100%;
+        height: 50vh;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+    }
+}

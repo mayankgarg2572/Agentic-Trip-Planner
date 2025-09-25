@@ -1,5 +1,7 @@
 import React, { useContext } from 'react';
 import { MapContext } from '../context/MapContext';
+import styles from './ResultsSidebar.module.css'
+
 
 const ResultsSidebar = ({ onClose }) => {
   const { searchResults, setMapCenter, setSearchResults } = useContext(MapContext);
@@ -14,7 +16,7 @@ const ResultsSidebar = ({ onClose }) => {
    ;
 
   return (
-    <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: '300px', background: '#fff', overflowY: 'auto', zIndex: 1000 }}>
+    <div style={styles.resultSideBar}>
       <p>Search Results</p>
       <button onClick={onClose}>✖️</button>
       <ul style={{ listStyle: 'none', padding: 0 }}>

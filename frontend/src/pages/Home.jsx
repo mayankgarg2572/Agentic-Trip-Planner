@@ -47,10 +47,17 @@ const Home = () => {
       setSidebarWidth(newWidth);
     }
   };
-  const handleTouchEnd = () => setIsResizing(false);
-    const handleMouseUp = () => setIsResizing(false);
+  const handleTouchEnd = () => {
+    setIsResizing(false)
+    document.body.style.userSelect = ""; // Re-enable text selection
+  };
+    const handleMouseUp = () => {
+      setIsResizing(false)
+      document.body.style.userSelect = ""; // Re-enable text selection
+    };
 
     if (isResizing) {
+      document.body.style.userSelect = "none"; 
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
       window.addEventListener("touchmove", handleTouchMove, { passive: false });

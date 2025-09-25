@@ -1,15 +1,18 @@
 .vscode
+
+# Agent Backend
 agent-backend/agentenv
 agent-backend/.env
 *__pycache__*
-agent-backend/.env
 
+# Node Backend
 backend/node_modules
 backend/.env
 backend/package-lock.json
 
+# Frontend
 frontend/node_modules
-frontend/package-lock.json
 frontend/.env
+frontend/package-lock.json
 
 SampleBackendFlow.txt

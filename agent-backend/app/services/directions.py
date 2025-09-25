@@ -13,9 +13,13 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
     print("\n\nInside the fetch_route_metadata function")
     route_metadata = []
     for i, origin in enumerate(locations):
-    
+        if origin.lat <=0 or origin.lng <=0:
+            print("Finding negative coordinate for:", origin)
+            continue
         for j, dest in enumerate(locations):
             if i != j:
+                if dest.lat<=0  and dest.lng<=0 :
+                    continue 
                 url = (
                     f"https://api.geoapify.com/v1/routing"
                     f"?waypoints={origin.lat},{origin.lng}|{dest.lat},{dest.lng}"
@@ -48,6 +52,10 @@ def fetch_complete_itinerary(locations: List[Location]) -> object:
     print("\n\nInside the fetch_complete_itinerary function")
     cur_url = f"https://api.geoapify.com/v1/routing?waypoints="
     for i, origin in enumerate(locations):
+        if origin.lat <=0 or origin.lng <=0:
+            print("Finding negative coordinate for:", origin)
+            continue
+
         if i == len(locations)-1:
             cur_url+=f'{origin.lat},{origin.lng}'
         else:

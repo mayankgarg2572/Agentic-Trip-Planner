@@ -8,19 +8,23 @@ const ChatAgent = () => {
   const [prompt, setPrompt] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [selectedChatIndex, setSelectedChatIndex] = useState(null);
+  const [loading, setLoading] = useState(false);
   // const [table, setTable] = useState({});
   // const {  } = useContext(MapContext);
   const { setSearchResults, selectedLocations } = useContext(MapContext);
 
   const handleSend = async () => {
     if (!prompt.trim()) return;
+    setLoading(true);
     try {
-
-      let reqObj  = {prompt:prompt, locations_Selected: selectedLocations.map(loc => ({
-        title: loc.title,
-        lat: loc.lat,
-        lng: loc.lng
-      })) }
+      let reqObj = {
+        prompt: prompt,
+        locations_Selected: selectedLocations.map((loc) => ({
+          title: loc.title,
+          lat: loc.lat,
+          lng: loc.lng,
+        })),
+      };
       // console.log(reqObj)
       const res = await api.getItinerary(reqObj);
       // console.log("Result from Itinery:", res);
@@ -37,11 +41,9 @@ const ChatAgent = () => {
     } catch (error) {
       console.error("LLM Error:", error);
     }
+    setLoading(false);
   };
 
-
-  
- 
   // New ChatHistory component for better interaction
   const ChatHistory = ({
     chatHistory,
@@ -105,18 +107,20 @@ const ChatAgent = () => {
           id="usmsg"
           name="user-msg"
           rows={5}
-          style={{ width: "100%" }}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="Ask for itinerary"
+          placeholder="Share your trip plan here..."
+          disabled={loading}
         />
-        <div style={{ margin: "10px 0", fontSize: "0.95em", color: "#555" }}>
+        <div className={classes.selectedLocations}>
           <b>Selected Locations:</b>{" "}
           {selectedLocations && selectedLocations.length > 0
             ? selectedLocations.map((obj) => obj.title).join(", ")
             : "None"}
         </div>
-        <button onClick={handleSend}>Send</button>
+        <button onClick={handleSend} disabled={loading}>
+          {loading ? <div className={classes.loader}></div> : "Send"}
+        </button>
       </div>
     </div>
   );

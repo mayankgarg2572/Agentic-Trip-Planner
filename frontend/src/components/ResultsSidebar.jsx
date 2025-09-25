@@ -22,17 +22,12 @@ const ResultsSidebar = ({ onClose }) => {
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {searchResults.map((result, idx) => (
           <li key={idx}
-              style={{
-                cursor: 'pointer', padding: '10px', borderBottom: '1px solid #ddd',
-                backgroundColor: result.source === 'Geoapify' ? '#2d9dd6ff' : '#fafff0'
-              }}
+              className={styles.resultLIstElement}
               >
                 <div onClick={() => setMapCenter({ lat: result.lat, lng: result.lng })}>
                     <strong>{result.source}</strong>: {result.address}
                 </div>
-                <button onClick={() => removeResult(idx)} style={{ marginTop: '5px',
-                  color: 'red'
-                }}>
+                <button onClick={() => removeResult(idx)} className={styles.resultLIstElementCloseBtn}>
                   ❌ Remove
                 </button>
             

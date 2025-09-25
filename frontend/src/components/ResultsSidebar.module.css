@@ -1,23 +1,104 @@
-/* Add this to ResultsSidebar inline styles or create a mobile-specific class */
-
-
-.resultSideBar{
-    position: 'absolute'; 
-    left: 0;
-    top: 0;
-    height: '100%';
-    width: '300px'; 
-    background: '#fff';
-    overflow-y: 'auto'; 
-    z-index: 1000 
+.resultSideBar {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 20vw;
+  max-width: 100%;
+  background: #ffffff;
+  overflow-y: auto;
+  z-index: 999;
+  box-shadow: 0.2rem 0 0.5rem rgba(0, 0, 0, 0.1);
+  border-right: 0.1rem solid #ddd;
+  padding: 1rem;
 }
+
+.resultSideBar p {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0;
+  display: inline-block;
+}
+
+.resultSideBar button {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.resultSideBar button:hover {
+  color: #ff0000;
+}
+
+.resultSideBar ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+}
+
+.resultLIstElement {
+  cursor: pointer;
+  padding: 1rem;
+  border-bottom: 0.1rem solid #ddd;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: background-color 0.3s ease;
+}
+
+.resultLIstElement:hover {
+  background-color: #e6f7ff;
+}
+
+.resultLIstElement div {
+  flex: 1;
+  font-size: 1rem;
+}
+
+.resultLIstElementCloseBtn {
+  background: none;
+  border: none;
+  color: red;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.resultLIstElementCloseBtn:hover {
+  color: darkred;
+}
+
 @media (max-width: 768px) {
-    .resultsSidebar {
-        width: 100%;
-        height: 50vh;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        z-index: 1000;
-    }
+  .resultSideBar {
+    width: 100%;
+    height: 50vh;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    border-right: none;
+    border-top: 0.1rem solid #ddd;
+  }
+
+  .resultSideBar p {
+    font-size: 1rem;
+  }
+
+  .resultLIstElement {
+    padding: 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .resultLIstElement div {
+    font-size: 0.9rem;
+  }
 }

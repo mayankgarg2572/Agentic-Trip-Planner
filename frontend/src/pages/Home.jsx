@@ -7,7 +7,13 @@ import { MapContext } from "../context/MapContext";
 import classes from "./Home.module.css";
 
 const Home = () => {
-  const [sidebarWidth, setSidebarWidth] = useState(400);
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    // Dynamically set the initial sidebar width based on the screen size
+    if (window.innerWidth <= 768) {
+      return window.innerWidth ; // 40% of the screen width for mobile/tablets
+    }
+    return window.innerWidth * 0.1; // 25% of the screen width for desktops
+  });
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef(null);
   const { searchResults } = useContext(MapContext);
@@ -20,19 +26,41 @@ const Home = () => {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (isResizing) {
-        const newWidth = Math.min(Math.max(window.innerWidth - e.clientX, 300), 800);
-        setSidebarWidth(newWidth);
+        // const newWidth = Math.min(Math.max(window.innerWidth - e.clientX, 300), 800);
+        // setSidebarWidth(newWidth);
+        e.preventDefault(); // Prevent default scrolling behavior
+      const newWidth = Math.min(
+        Math.max(window.innerWidth - e.clientX, window.innerWidth * 0.1), // Minimum width of 300px
+        window.innerWidth * 0.8 // Maximum width of 80% of the viewport
+      );
+      setSidebarWidth(newWidth);
       }
     };
+    const handleTouchMove = (e) => {
+    if (isResizing) {
+      e.preventDefault(); // Prevent default scrolling behavior
+      const touch = e.touches[0];
+      const newWidth = Math.min(
+        Math.max(window.innerWidth - touch.clientX, 300), // Minimum width of 300px
+        window.innerWidth * 0.8 // Maximum width of 80% of the viewport
+      );
+      setSidebarWidth(newWidth);
+    }
+  };
+  const handleTouchEnd = () => setIsResizing(false);
     const handleMouseUp = () => setIsResizing(false);
 
     if (isResizing) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
     }
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+    window.removeEventListener("touchend", handleTouchEnd);
     };
   }, [isResizing]);
 

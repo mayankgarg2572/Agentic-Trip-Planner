@@ -1,30 +1,36 @@
 .container {
   display: flex;
+  flex-direction: row;
   height: 100vh;
 }
 
 .mapSection {
   flex: 1;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar {
-  position: relative;
+  display: flex;
+  flex-direction: column;
   background: #fff;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
-  transition: width 0.2s;
-  min-width: 300px;
-  max-width: 800px;
+  transition: width 0.2s ease-in-out;
+  min-width: 20vw;
+  max-width: 40vw;
+  height: 100%;
 }
 
 .resizer {
   cursor: col-resize;
-  width: 5px;
+  width: 0.25rem;
   position: absolute;
-  left: 0;
+  /* left: 0; */
+  /* right: 0; */
   top: 0;
   height: 100%;
-  background-color: #ccc;
+  background-color: #92a9c1;
   z-index: 100;
 }
 
@@ -35,19 +41,16 @@
 
   .mapSection {
     height: 50vh;
-    /* Adjust height for mobile */
   }
 
   .sidebar {
     width: 100%;
+    height: 50vh;
     min-width: unset;
     max-width: unset;
-    height: 50vh;
-    /* Adjust height for mobile */
   }
 
   .resizer {
     display: none;
-    /* Hide resizer on mobile */
   }
 }

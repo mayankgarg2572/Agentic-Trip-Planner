@@ -36,11 +36,17 @@ const ChatAgent = () => {
         ...prev,
         { user: prompt, agent: agentResponse },
       ]);
-      setPrompt("");
-      setSelectedChatIndex(chatHistory.length);
+      
     } catch (error) {
       console.error("LLM Error:", error);
+      setSearchResults("Something went wrong while processing your query")
+      setChatHistory((prev) => [
+        ...prev,
+        { user: prompt, agent: "Something went wrong while processing your query" },
+      ]);
     }
+    setPrompt("");
+    setSelectedChatIndex(chatHistory.length);
     setLoading(false);
   };
 

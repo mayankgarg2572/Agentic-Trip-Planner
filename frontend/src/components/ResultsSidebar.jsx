@@ -16,7 +16,7 @@ const ResultsSidebar = ({ onClose }) => {
    ;
 
   return (
-    <div style={styles.resultSideBar}>
+    <div className={styles.resultSideBar}>
       <p>Search Results</p>
       <button onClick={onClose}>✖️</button>
       <ul style={{ listStyle: 'none', padding: 0 }}>

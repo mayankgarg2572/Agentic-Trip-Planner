@@ -5,17 +5,13 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-control-geocoder/dist/Control.Geocoder.css";
 import "leaflet-control-geocoder";
-
+import api from "../api/api";
 
 const MapView = () => {
   // console.log("MapView is Mounting");
   const mapRef = useRef(null);
-  const {
-    mapCenter,
-    setMapCenter,
-    setSearchResults,
-    setSelectedLocations,
-  } = useContext(MapContext);
+  const { mapCenter, setMapCenter, setSearchResults, setSelectedLocations } =
+    useContext(MapContext);
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -33,7 +29,7 @@ const MapView = () => {
           .setLatLng(e.latlng)
           .setContent('<button id="addMarker">Mark this Location</button>')
           .openOn(mapRef.current);
-        
+
         document.getElementById("addMarker").onclick = () => {
           setSelectedLocations((prevLocations) => {
             const newMarkerTitle = `${prevLocations.length + 1}`; // Use the latest length of selectedLocations
@@ -46,14 +42,14 @@ const MapView = () => {
             // Create a new marker with a tooltip
             const marker = L.marker(e.latlng, {
               icon: L.icon({
-              iconUrl:
-                "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowUrl:
-                "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-              shadowSize: [41, 41],
+                iconUrl:
+                  "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowUrl:
+                  "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+                shadowSize: [41, 41],
               }),
               title: newMarkerTitle,
             });
@@ -74,18 +70,22 @@ const MapView = () => {
             marker.on("click", function () {
               marker.openPopup();
               setTimeout(() => {
-              const btn = document.getElementById(`removeMarker-${newMarkerTitle}`);
-              if (btn) {
-                btn.onclick = () => {
-                mapRef.current.removeLayer(marker);
-                setSelectedLocations((prev) =>
-                  prev.filter(
-                  (loc) =>
-                    !(loc.lat === e.latlng.lat && loc.lng === e.latlng.lng)
-                  )
+                const btn = document.getElementById(
+                  `removeMarker-${newMarkerTitle}`
                 );
-                };
-              }
+                if (btn) {
+                  btn.onclick = () => {
+                    mapRef.current.removeLayer(marker);
+                    setSelectedLocations((prev) =>
+                      prev.filter(
+                        (loc) =>
+                          !(
+                            loc.lat === e.latlng.lat && loc.lng === e.latlng.lng
+                          )
+                      )
+                    );
+                  };
+                }
               }, 0);
             });
 
@@ -119,23 +119,27 @@ const MapView = () => {
   }, [mapCenter, setMapCenter, setSearchResults]);
 
   useEffect(() => {
-    fetch("https://ipapi.co/json/")  // Can use http://ip-api.co/json/ but this is not easy for deploying as it is not https. 
-      .then((res) => res.json())
-      .then((data) => {
+    const func = async () => {
+      try {
+        const data = await api.getLatLongForIP();
         // console.log("Data from ipapi.com :", data)
         if (data.lat && data.lon) {
           setMapCenter({ lat: data.lat, lng: data.lon });
-        } else if(data.latitude && data.longitude) {
+        } else if (data.latitude && data.longitude) {
           setMapCenter({ lat: data.latitude, lng: data.longitude });
-        }
-        else{
+        } else {
           setMapCenter({ lat: 0, lng: 0 });
         }
-      })
-      .catch((err) => {
-        console.error("getting error:", err, " when using API service.")
-        setMapCenter({ lat: 0, lng: 0 });
-      });
+      } catch (error) {
+        console.error(error);
+      }
+      try {
+        await api.startServer();
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    func();
     // called = true;
     // }
   }, []);

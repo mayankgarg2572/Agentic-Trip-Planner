@@ -1,8 +1,23 @@
 import axios from "axios";
 
-import { API_BASE, AGENTIC_API_BASE } from "./config";
+import { API_BASE, AGENTIC_API_BASE, AGENTIC_API_STATUS } from "./config";
 
 const api = {
+  startServer: async () => {
+    try{
+      const response =  await axios.get(`${AGENTIC_API_STATUS}/`)
+      
+      if (response.data.status !== 'good') {
+        console.log(response)
+        const error = "Some issue arises in the server"
+        throw error  
+      }
+    }
+    catch(error){
+      console.log("Some error in accessing the server:")
+      throw error
+    }
+  },
   searchLocation: async (address) => {
     try {
       const response = await axios.post(`${API_BASE}/search-location`, {
@@ -50,6 +65,19 @@ const api = {
       throw error;
     }
   },
+
+  getLatLongForIP: async () => {
+    try {
+      const res  = await axios.get("https://ipapi.co/json/") // Can use http://ip-api.co/json/ but this is not easy for deploying as it is not https.
+      
+      return res.data
+    } catch (error) {
+      console.error("Error in Accessing the Locatio  for IP:", error);
+      throw error;
+    }
+    
+        
+  }
 };
 
 export default api;

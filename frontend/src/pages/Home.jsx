@@ -91,7 +91,7 @@ const Home = () => {
         <MapView />
       </div>
       <div
-        ref={sidebarRef}
+        // ref={sidebarRef}
         className={classes.sidebar}
         style={{ width: sidebarWidth }}
       >

@@ -8,7 +8,7 @@ const api = {
       const response =  await axios.get(`${AGENTIC_API_STATUS}/`)
       
       if (response.data.status !== 'good') {
-        console.log(response)
+        console.log(response.data.status)
         const error = "Some issue arises in the server"
         throw error  
       }

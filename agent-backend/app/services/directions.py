@@ -14,32 +14,32 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
     route_metadata = []
     for i, origin in enumerate(locations):
         if origin.lat <=0 or origin.lng <=0:
-            print("Finding negative coordinate for:", origin)
+            print("Negative coordinates:", origin)
             continue
-        for j, dest in enumerate(locations):
-            if i != j:
-                if dest.lat<=0  or dest.lng<=0 :
-                    continue 
-                url = (
-                    f"https://api.geoapify.com/v1/routing"
-                    f"?waypoints={origin.lat},{origin.lng}|{dest.lat},{dest.lng}"
-                    f"&mode=drive&apiKey={GEOAPIFY_API_KEY}"
-                )
-                try:
-                    response = httpx.get(url)
-                    response.raise_for_status()
-                    data = response.json()
+        for j in range(i+1, len(locations)):
+            dest =  locations[j]
+            if dest.lat<=0  or dest.lng<=0 :
+                continue 
+            url = (
+                f"https://api.geoapify.com/v1/routing"
+                f"?waypoints={origin.lat},{origin.lng}|{dest.lat},{dest.lng}"
+                f"&mode=drive&apiKey={GEOAPIFY_API_KEY}"
+            )
+            try:
+                response = httpx.get(url)
+                response.raise_for_status()
+                data = response.json()
 
-                    distance = data["features"][0]["properties"]["distance"]
-                    duration = data["features"][0]["properties"]["time"]
-                    route_metadata.append(RouteMetadata(
-                        from_location=origin.address,
-                        to_location=dest.address,
-                        distance_km=distance / 1000,
-                        travel_time_min=duration / 60
-                    ))
-                except Exception as e:
-                    print(f"For origin:{origin},\nand destination:{dest}\ngetting error:",e )
+                distance = data["features"][0]["properties"]["distance"]
+                duration = data["features"][0]["properties"]["time"]
+                route_metadata.append(RouteMetadata(
+                    from_location=origin.address,
+                    to_location=dest.address,
+                    distance_km=distance / 1000,
+                    travel_time_min=duration / 60
+                ))
+            except Exception as e:
+                print(f"For origin:{origin},\nand destination:{dest}\ngetting error:",e )
                     
     print("\nReturning from fetch_route_metadata function")
     return route_metadata

@@ -11,8 +11,8 @@
 
 .chatHistoryScroll {
   flex: 1;
-  overflow-y: auto;
-  max-height: 40vh;
+  /* overflow-y: auto; */
+  /* max-height: 40vh; */
   margin-bottom: 1rem;
   border: 0.1rem solid #ddd;
   border-radius: 0.5rem;
@@ -44,7 +44,7 @@
 }
 
 .selectedChatDetail {
-  max-height: 20vh;
+  /* max-height: 20vh; */
   overflow-y: auto;
   margin-top: 1rem;
   border: 0.1rem solid #ddd;
@@ -117,7 +117,7 @@
   }
 
   .chatHistoryScroll {
-    max-height: 30vh;
+    /* max-height: 30vh; */
   }
 
   .chatForm textarea {

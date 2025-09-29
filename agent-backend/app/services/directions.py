@@ -13,12 +13,12 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
     print("\n\nInside the fetch_route_metadata function")
     route_metadata = []
     for i, origin in enumerate(locations):
-        if origin.lat <=0 or origin.lng <=0:
+        if _valid_coord(origin.lat, origin.lng ) :
             print("Negative coordinates:", origin)
             continue
         for j in range(i+1, len(locations)):
             dest =  locations[j]
-            if dest.lat<=0  or dest.lng<=0 :
+            if _valid_coord(dest.lat, dest.lng )  :
                 continue 
             url = (
                 f"https://api.geoapify.com/v1/routing"
@@ -72,4 +72,14 @@ def fetch_complete_itinerary(locations: List[Location]) -> object:
         return None
     print("Completed result from geoApify Complete Itineraries Route.\n\n")
     return data
+
+import httpx, math, random, time
+
+TIMEOUT = httpx.Timeout(connect=5.0, read=30.0, write=10.0, pool=5.0)
+LIMITS = httpx.Limits(max_keepalive_connections=10, max_connections=20)
+
+def _valid_coord(lat, lng):
+    # 0 and negatives are valid; enforce real ranges instead
+    return (lat is not None and lng is not None and
+            -90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0)
 

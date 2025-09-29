@@ -70,3 +70,5 @@ def reverse_geocode_coordinates(coords: List[userSpecifiedLocation]) -> List[Loc
             continue
     print("\nCompleted function reverse_geocode_coordinates")
     return results
+
+

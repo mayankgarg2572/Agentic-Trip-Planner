@@ -17,10 +17,11 @@ from typing import Any, Dict, List, Optional
 
 def llm_with_web_search(prompt, llm, max_loops=2):
     final_content = [""]
+    print(f"Inside llm_with_web_search")
     for _ in range(max_loops+1):
         
         result = llm.invoke(prompt)
-        print(f"\n\nInside llm_with_web_searchResult:\n\n{result.content}")
+        
         content = result.content if hasattr(result, "content") else str(result)
         content = content.strip()
         if content.startswith("search:"):
@@ -38,7 +39,7 @@ def llm_with_web_search(prompt, llm, max_loops=2):
             return content[len("final_response:"):].strip()
         else:
             return content
-    print("Not able to complete the web search too much calls, returning:", final_content)
+    print("Not able to complete the web search, too much calls, sample final content(max 10):", final_content[:min(len(final_content), 10)])
     return " ".join(final_content)
 
 def remove_json_prefix_list(content: str) -> List[Any]:
@@ -82,8 +83,8 @@ def extract_suitable_time(user_query: str, locations: list[dict]) -> str:
     prompt = TIME_OPENING_FINDER + "\n\nUser query:" + f"{user_query}\n\nLocations: {locations}."
 
     result = llm_with_web_search(prompt, llm)
-    print("\nCompleted extract_suitable_time function call")
     timings = remove_json_prefix_list(result)
+    print("\nCompleted extract_suitable_time function call")
     return str(timings) if timings is not None else ""
 
 
@@ -102,6 +103,13 @@ def order_locations(location_objs, routes, suitable_time_opening, user_query):
     print("\nCompleted order_locations function call")
     return ordered
 
+
+
+def find_correct_coordinates():
+    # I can have here user query, then 
+    # I will have an array of Location objects
+    # Now there using the user query and the respective 
+    pass
 
 
 def estimate_budget(user_query, location_objs):

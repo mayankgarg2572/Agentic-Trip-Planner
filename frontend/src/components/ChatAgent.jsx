@@ -27,11 +27,12 @@ const ChatAgent = () => {
       };
       // console.log(reqObj)
       const res = await api.getItinerary(reqObj);
+      // console.log(res)
       // console.log("Result from Itinery:", res);
       // setResponse(res.data.itinerary.final_text);
-      setSearchResults(res.data.itinerary.locations);
+      setSearchResults(res.itinerary.locations);
 
-      const agentResponse = res.data.itinerary.final_text;
+      const agentResponse = res.itinerary.final_text;
       setChatHistory((prev) => [
         ...prev,
         { user: prompt, agent: agentResponse },

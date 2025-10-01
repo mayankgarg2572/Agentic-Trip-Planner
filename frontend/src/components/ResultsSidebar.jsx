@@ -6,15 +6,17 @@ import styles from './ResultsSidebar.module.css'
 const ResultsSidebar = ({ onClose }) => {
   const { searchResults, setMapCenter, setSearchResults } = useContext(MapContext);
 
+
+
+  if (!Array.isArray(searchResults) || searchResults.length === 0) return null;
+
   const removeResult =  (idx) => {
+    if (!Array.isArray(searchResults)) return;
     const updatedResults = [...searchResults]
     updatedResults.splice(idx, 1)
     setSearchResults(updatedResults)
   }
-
-  if (searchResults.length === 0) return null
-   ;
-
+  
   return (
     <div className={styles.resultSideBar}>
       <p>Search Results</p>

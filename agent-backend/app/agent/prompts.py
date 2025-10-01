@@ -50,245 +50,139 @@ Tips:
 
 
 GEOAPIFY_INPUT_PREP_PROMPT = """
-Role: Geoapify Input Preparer
+Role: You convert a list of location names from a user query into clean, disambiguated, admin-rich records for Geoapify geocoding.
 
-Task: Convert a list of location names (already extracted from the user query) into disambiguated, admin-rich records that can be passed to Geoapify's geocoding API.
+Important points to follow (STRICT)
+- Output contract
+  - If you need the web to resolve ambiguity, output ONLY:  search: <your_query_text>
+  - When you are ready to answer, output ONLY:  final_response: <your JSON array>
+  - Never output both in the same response. No extra commentary. No code fences.
+  - You may use the web-search tool at most {max_search} time(s). Prefer one precise, combined query.
+- Output schema (repeat per input location)
+  [
+    {{
+      "name_original": "<as received>",
+      "name_canonical": "<normalized official name>",
+      "geocode_type": "city|amenity|locality|street|unknown",
+      "country": "<country or null>",
+      "state": "<admin-1/state or null>",
+      "city": "<city/town or null>",
+      "postcode": "<postal code if verified; else null>",
+      "locality": "<neighborhood/area or null>",
+      "inside_of": "<complex/campus name or null>",
+      "nearby": "<helpful nearby landmark or null>",
+      "geocode_text": "<place, locality, near <landmark>, city, state, country>",
+      "sources": []
+    }}
+  ]
+- Schema compliance
+  - "geocode_type" MUST be EXACTLY one of: "city", "amenity", "locality", "street", "unknown".
+  - Never use "state", "province", or "region" as geocode_type. Those belong ONLY in the "state" field. If unsure → "unknown".
+  - Return a single JSON array. No markdown, no backticks, no trailing commas, no comments, no extra keys.
+  - Use null for any unknown field. Keep keys exactly as shown.
+- Data discipline
+  - Do NOT fabricate latitude/longitude or postcodes. Include a postcode only if explicitly present in reliable sources.
+  - Prefer authoritative sources (official sites, tourism boards, Wikipedia infoboxes). Put URLs (if used) into "sources".
+- Disambiguation
+  - If a name is ambiguous, perform at most {max_search} web search(es) with one well-formed combined query that covers all ambiguous items.
+  - After results are provided, respond with final_response only.
+- Geocode typing guidelines
+  - "city": cities/towns.  "amenity": POIs (temple, museum, fort, hotel).  "locality": neighborhoods/areas.  "street": street names.
+- geocode_text construction (exact order)
+  - place, locality, near <landmark_if_any>, city, state, country
+  - Omit missing parts without extra commas/spaces and avoid duplicates.
 
-You MUST follow the tool protocol:
-- If you need the web to resolve ambiguity, output ONLY:  search: <your_query_text>
-- When you are ready to answer, output ONLY:  final_response: <your JSON>
-- Never output both in the same response.
-- You may use the web-search tool at most {max_search} times. Prefer a single, well-formed query.
+Tips
+- Map input types: tourist_spot → amenity; destination → city (if it’s a known city/town); accommodation → amenity.
+- Use "inside_of" for POIs located within a larger complex/campus (e.g., a gate inside a fort).
+- If the city name appears in the POI itself, avoid repeating it in geocode_text.
+- If uncertainty persists, prefer "unknown" for geocode_type rather than guessing.
 
-What to produce (for EACH location in the input):
-Return a JSON array of objects with this schema:
-[
-  {{
-    "name_original": "<as received>",
-    "name_canonical": "<normalized official/canonical name>",
-    "geocode_type": "city|amenity|locality|street|unknown",
-    "country": "<country name or null>",
-    "state": "<admin-1/state or null>",
-    "city": "<city/town or null>",
-    "postcode": "<postal code if explicitly present in sources, else null>",
-    "locality": "<neighborhood/area or null>",
-    "inside_of": "<complex or campus it belongs to (e.g., 'Jaisalmer Fort') or null>",
-    "nearby": "<well-known nearby landmark to help disambiguation or null>",
-    "geocode_text": "<single string built as: place, locality, near <landmark>, city, state, country>",
-    "sources": ["<url1>", "<url2>", "<url3>"]
-  }},
-  ...
-]
-
-Strict rules:
-- DO NOT invent latitude/longitude. Only return admin fields you can read or infer reliably from authoritative sources.
-- Prefer official/authoritative pages (tourism boards, official sites, Wikipedia infoboxes).
-- For "geocode_type", choose "city" for cities/towns, "amenity" for POIs (temple, museum, fort, lake), "locality" for neighborhoods/areas.
-- Build "geocode_text" exactly in this order: place, locality, near <landmark_if_any>, city, state, country.
-  * Omit any missing part without leaving extra commas or spaces.
-  * De-duplicate tokens (e.g., avoid repeating the city twice).
-- If ambiguity remains (same name exists in multiple cities/countries), use the web-search tool with one combined query
-  to pull the admin context; then return final_response.
-
-Inputs you will receive at the end of this prompt:
-- user_query: free-text user ask with context
-- locations: list of objects from a previous step, e.g. [{{"name":"...","type":"tourist_spot"}}, ...]
-
-Output contract:
-- If you need to search:  search: "<single combined query string>"
-- Else:  final_response: <JSON array per schema above>
-- No extra text besides the one required by the protocol.
-
-Examples (study carefully):
-
-Example A (straightforward POIs within a known city)
-user_query: "2-day Jaisalmer plan: Amar Sagar Lake, Jaisalmer Fort Surya Gate, Patwon ki Haveli."
+Good example (ideal format)
+user_query: "Plan for Jaipur: Hawa Mahal and Jal Mahal."
 locations: [
-  {{"name":"Amar Sagar Lake","type":"tourist_spot"}},
-  {{"name":"Surya Gate","type":"tourist_spot"}},
-  {{"name":"Patwon ki Haveli","type":"tourist_spot"}}
+  {{"name":"Hawa Mahal","type":"tourist_spot"}},
+  {{"name":"Jal Mahal","type":"tourist_spot"}}
 ]
 final_response:
 [
   {{
-    "name_original":"Amar Sagar Lake",
-    "name_canonical":"Amar Sagar Lake",
-    "geocode_type":"amenity",
-    "country":"India",
-    "state":"Rajasthan",
-    "city":"Jaisalmer",
+    "name_original": "Hawa Mahal",
+    "name_canonical": "Hawa Mahal",
+    "geocode_type": "amenity",
+    "country": "India",
+    "state": "Rajasthan",
+    "city": "Jaipur",
     "postcode": null,
-    "locality":"Amar Sagar",
+    "locality": "Badi Choupad",
     "inside_of": null,
     "nearby": null,
-    "geocode_text":"Amar Sagar Lake, Amar Sagar, Jaisalmer, Rajasthan, India",
-    "sources":[]
+    "geocode_text": "Hawa Mahal, Badi Choupad, Jaipur, Rajasthan, India",
+    "sources": []
   }},
   {{
-    "name_original":"Surya Gate",
-    "name_canonical":"Surya Gate (Suraj Pol)",
-    "geocode_type":"amenity",
-    "country":"India",
-    "state":"Rajasthan",
-    "city":"Jaisalmer",
+    "name_original": "Jal Mahal",
+    "name_canonical": "Jal Mahal",
+    "geocode_type": "amenity",
+    "country": "India",
+    "state": "Rajasthan",
+    "city": "Jaipur",
     "postcode": null,
-    "locality":"Dhibba Para",
-    "inside_of":"Jaisalmer Fort",
-    "nearby": null,
-    "geocode_text":"Surya Gate (Suraj Pol), Dhibba Para, inside Jaisalmer Fort, Jaisalmer, Rajasthan, India",
-    "sources":[]
-  }},
-  {{
-    "name_original":"Patwon ki Haveli",
-    "name_canonical":"Patwon Ki Haveli",
-    "geocode_type":"amenity",
-    "country":"India",
-    "state":"Rajasthan",
-    "city":"Jaisalmer",
-    "postcode": null,
-    "locality":"Gopa Chowk",
+    "locality": "Amer Road",
     "inside_of": null,
-    "nearby":"Nathmal Ki Haveli",
-    "geocode_text":"Patwon Ki Haveli, Gopa Chowk, near Nathmal Ki Haveli, Jaisalmer, Rajasthan, India",
-    "sources":[]
+    "nearby": "Man Sagar Lake",
+    "geocode_text": "Jal Mahal, Amer Road, near Man Sagar Lake, Jaipur, Rajasthan, India",
+    "sources": []
   }}
 ]
 
-Example B (ambiguous name → use search first)
-user_query: "Add Victoria Memorial and maybe Eden Gardens."
+Bad example (intentionally contains many violations)
+user_query: "Kolkata day: Victoria Memorial, Eden Gardens."
 locations: [
   {{"name":"Victoria Memorial","type":"tourist_spot"}},
   {{"name":"Eden Gardens","type":"tourist_spot"}}
 ]
-search: "Victoria Memorial Kolkata admin details locality and postcode; Eden Gardens Kolkata admin details locality and postcode"
--- (After results are provided to you) --
+search: "Victoria Memorial Eden Gardens details"                     // ❌ includes search:
 final_response:
 [
   {{
-    "name_original":"Victoria Memorial",
-    "name_canonical":"Victoria Memorial",
-    "geocode_type":"amenity",
-    "country":"India",
-    "state":"West Bengal",
-    "city":"Kolkata",
-    "postcode":"700071",
-    "locality":"Maidan",
-    "inside_of": null,
-    "nearby":"Maidan Metro",
-    "geocode_text":"Victoria Memorial, Maidan, near Maidan Metro, Kolkata, West Bengal, India",
-    "sources":["<wp_or_official_url>"]
-  }},
-  {{
-    "name_original":"Eden Gardens",
-    "name_canonical":"Eden Gardens",
-    "geocode_type":"amenity",
-    "country":"India",
-    "state":"West Bengal",
-    "city":"Kolkata",
-    "postcode":"700021",
-    "locality":"B.B.D. Bagh",
-    "inside_of": null,
-    "nearby":"Howrah Bridge",
-    "geocode_text":"Eden Gardens, B.B.D. Bagh, near Howrah Bridge, Kolkata, West Bengal, India",
-    "sources":["<wp_or_official_url>"]
-  }}
-]
-
-Example C (city-level destination + hotel with scarce info; no postcode available)
-user_query: "3 nights in Udaipur; shortlist Hotel Lakeview and City Palace."
-locations: [
-  {{"name":"Udaipur","type":"destination"}},
-  {{"name":"Hotel Lakeview","type":"accommodation"}},
-  {{"name":"City Palace","type":"tourist_spot"}}
-]
-
-search: "Hotel Lakeview in Udaipur; City Paradise in Udaipur"
-
-
--- (After results are provided to you) --
-final_response:
-[
-  {{
-    "name_original":"Udaipur",
-    "name_canonical":"Udaipur",
-    "geocode_type":"city",
-    "country":"India",
-    "state":"Rajasthan",
-    "city":"Udaipur",
-    "postcode": null,
-    "locality": null,
-    "inside_of": null,
+    "name_original": "Victoria Memorial",
+    "name_canonical": "Victoria Memorial, Kolkata, Kolkata",        // ❌ duplicate city in canonical
+    "geocode_type": "state",                                        // ❌ invalid enum
+    "country": "India",
+    "state": "West Bengal",
+    "city": "Kolkata",
+    "postcode": "700000",                                           // ❌ fabricated postcode
+    "locality": "Maidan",
+    "inside_of": "Kolkata",                                         // ❌ nonsense inside_of
     "nearby": null,
-    "geocode_text":"Udaipur, Rajasthan, India",
-    "sources":[]
+    "lat": 22.54, "lng": 88.34,                                     // ❌ forbidden fields
+    "geocode_text": "India, West Bengal, Kolkata, Victoria Memorial", // ❌ wrong order
+    "sources": ["someblog.example.com"],
+    "extra": "commentary"                                           // ❌ extra key
   }},
   {{
-    "name_original":"Hotel Lakeview",
-    "name_canonical":"Hotel Lakeview Udaipur",
-    "geocode_type":"amenity",
-    "country":"India",
-    "state":"Rajasthan",
-    "city":"Udaipur",
+    "name_original": "Eden Gardens",
+    "name_canonical": "Eden Gardens",
+    "geocode_type": "poi",                                          // ❌ invalid enum
+    "country": "India",
+    "state": "West Bengal",
+    "city": "Kolkata",
     "postcode": null,
-    "locality":"Near Pichola",
+    "locality": "B.B.D. Bagh",
     "inside_of": null,
-    "nearby":"Lake Pichola",
-    "geocode_text":"Hotel Lakeview Udaipur, Near Pichola, near Lake Pichola, Udaipur, Rajasthan, India",
-    "sources":[]
-  }},
-  {{
-    "name_original":"City Palace",
-    "name_canonical":"City Palace, Udaipur",
-    "geocode_type":"amenity",
-    "country":"India",
-    "state":"Rajasthan",
-    "city":"Udaipur",
-    "postcode": null,
-    "locality":"Old City",
-    "inside_of": null,
-    "nearby":"Jagdish Temple",
-    "geocode_text":"City Palace, Old City, near Jagdish Temple, Udaipur, Rajasthan, India",
-    "sources":[]
+    "nearby": "Howrah Bridge",
+    "geocode_text": "Eden Gardens, Kolkata, Kolkata, West Bengal, India, India", // ❌ duplicates
+    "sources": []
   }}
 ]
+``` // ❌ both search & final_response; comments present; code fences; invalid JSON
 
-Example D (foreign POI; ensure correct country)
-user_query: "Short stop at Marina Bay Sands and Gardens by the Bay."
-locations: [
-  {{"name":"Marina Bay Sands","type":"tourist_spot"}},
-  {{"name":"Gardens by the Bay","type":"tourist_spot"}}
-]
-final_response:
-[
-  {{
-    "name_original":"Marina Bay Sands",
-    "name_canonical":"Marina Bay Sands",
-    "geocode_type":"amenity",
-    "country":"Singapore",
-    "state": null,
-    "city":"Singapore",
-    "postcode": null,
-    "locality":"Marina Bay",
-    "inside_of": null,
-    "nearby":"ArtScience Museum",
-    "geocode_text":"Marina Bay Sands, Marina Bay, near ArtScience Museum, Singapore, Singapore",
-    "sources":[]
-  }},
-  {{
-    "name_original":"Gardens by the Bay",
-    "name_canonical":"Gardens by the Bay",
-    "geocode_type":"amenity",
-    "country":"Singapore",
-    "state": null,
-    "city":"Singapore",
-    "postcode": null,
-    "locality":"Marina South",
-    "inside_of": null,
-    "nearby":"Marina Bay Sands",
-    "geocode_text":"Gardens by the Bay, Marina South, near Marina Bay Sands, Singapore, Singapore",
-    "sources":[]
-  }}
-]
+
+Final reminders (repeat)
+- STRICT SCHEMA: Only keys shown; "geocode_type" ∈ {{"city","amenity","locality","street","unknown"}}; null for unknowns; no extra keys, no comments, no code fences.
+- WEB_SEARCH RULE: If ambiguous, output ONLY one search: ... (≤ {max_search}). After results, output ONLY final_response.
+- NO FABRICATION: Never invent lat/lng or postcodes; prefer authoritative sources; if unsure use "unknown".
 """.format(max_search=MAX_TIME_WEB_SEARCH)
 
 

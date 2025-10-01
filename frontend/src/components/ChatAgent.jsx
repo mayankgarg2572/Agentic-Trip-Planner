@@ -34,18 +34,20 @@ const ChatAgent = () => {
 
 
       // setSearchResults(res?.itinerary?.locations);
-      setSearchResults(res?.itinerary?.locations?.map((loc)=> {
+      setSearchResults(Array.isArray(res?.itinerary?.locations)? res.itinerary.locations.map((loc)=> {
         return {
           address: loc.address,
           lat: parseFloat(loc.lat),
           lng: parseFloat(loc.lng),
           source: "Agent",
         }
-      }));
+      })
+      : []
+    );
 
       const agentResponse = res?.itinerary?.final_text;
 
-      setItineary(res?.api_result_itineraries?.features[0])
+      setItineary(res?.api_result_itineraries?.features?.[0]?? null)
       setChatHistory((prev) => [
         ...prev,
         { user: prompt, agent: agentResponse },
@@ -53,7 +55,7 @@ const ChatAgent = () => {
       
     } catch (error) {
       console.error("LLM Error:", error);
-      setSearchResults("Something went wrong while processing your query")
+      setSearchResults([])
       setChatHistory((prev) => [
         ...prev,
         { user: prompt, agent: "Something went wrong while processing your query" },

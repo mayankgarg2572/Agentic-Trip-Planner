@@ -1,3 +1,4 @@
+from hmac import new
 from exceptiongroup import catch
 from app.utils.llm import MAIN_LLM
 from app.services.directions import fetch_complete_itinerary, fetch_routes_metadata
@@ -77,36 +78,46 @@ def to_base_loc(loc) -> Optional[BaseLocInfo]:
 
 def extract_locations(user_query: str) -> List[BaseLocInfo]:
     print("\n\nInside the extract_locations function")
-    llm = MAIN_LLM  # No need to bind tools
+    llm = MAIN_LLM  
     prompt = (
         LOCATION_EXTRACTION_PROMPT +
         f"\nUser query: {user_query}\n"
     )
-    content = llm_with_web_search(prompt, llm)
-    locations = remove_json_prefix_list(content)
+    try:
+
+        content = llm_with_web_search(prompt, llm)
+        locations = remove_json_prefix_list(content)
+        locations =  [BaseLocInfo(**loc) for loc in locations if isinstance(loc, dict) and "name" in loc and "type" in loc]
+        return locations
+    except Exception as e:
+        print("Error occurred while extracting locations:", e)
+        raise e
 
     
-    # converted = []
-    # for loc in locations:
-    #     b = to_base_loc(loc)
-    #     if b is not None:
-    #         converted.append(b)
-    # locations = converted
-    return locations
 
 
 def format_locations(user_query:str, locations: List[BaseLocInfo]) -> List[GeoAPILocInput]:
     print("\n\nInside the format_locations function")
-    llm = MAIN_LLM  # No need to bind tools
+    llm = MAIN_LLM  
     prompt = (
         GEOAPIFY_INPUT_PREP_PROMPT +
         f"\nUser query: {user_query}"+
         f"\n\n Locations: {locations}"
     )
-    content = llm_with_web_search(prompt, llm)
-    new_locations = remove_json_prefix_list(content)
-
-    return new_locations
+    try:
+        content = llm_with_web_search(prompt, llm)
+        new_locations = remove_json_prefix_list(content)
+        new_locations = [
+            GeoAPILocInput(**loc) for loc in new_locations
+            if isinstance(loc, dict) and
+                "name_canonical" in loc and loc["name_canonical"] and
+                "geocode_text" in loc and loc["geocode_text"] and
+                "name_original" in loc and loc["name_original"]
+        ]
+        return new_locations
+    except Exception as e:
+        print("Error occurred while formatting locations:", e)
+        raise e
 
 
 def extract_suitable_time(user_query: str, locations: list[GeoAPILocInput]) -> str:
@@ -114,10 +125,13 @@ def extract_suitable_time(user_query: str, locations: list[GeoAPILocInput]) -> s
 
     llm = MAIN_LLM
     prompt = TIME_OPENING_FINDER + "\n\nUser query:" + f"{user_query}\n\nLocations: {locations}."
-
-    result = llm_with_web_search(prompt, llm)
-    timings = remove_json_prefix_list(result)
-    # print("\nCompleted extract_suitable_time function call")
+    
+    try:
+        result = llm_with_web_search(prompt, llm)
+        timings = remove_json_prefix_list(result)
+    except Exception as e:
+        print("Error occurred while extracting suitable time:", e)
+        timings = None
     return str(timings) if timings is not None else ""
 
 
@@ -127,44 +141,40 @@ def order_locations(location_objs, routes, suitable_time_opening, user_query):
     names = [loc.address for loc in location_objs]
     prompt = ROUTE_ORDER_PROMPT + f"\n\nUser query: {user_query}\n\nLocations: {names}\n\nRoutes General info between different Locations:{routes}\n\nSuitable opening times of tourists spots: {suitable_time_opening}"
     result = llm.invoke(prompt)
-
-    result = llm_with_web_search(prompt, llm)
-    ordered_names = remove_json_prefix_list(result)
-    
-    ordered = [loc for name in ordered_names for loc in location_objs if loc.address == name]
-    # print("\nCompleted order_locations function call")
-    return ordered
-
-
-
-def find_correct_coordinates():
-    # I can have here user query, then 
-    # I will have an array of Location objects
-    # Now there using the user query and the respective 
-    pass
+    try:
+        result = llm_with_web_search(prompt, llm)
+        ordered_names = remove_json_prefix_list(result)
+        ordered = [loc for name in ordered_names for loc in location_objs if loc.address == name]
+        return ordered
+    except Exception as e:
+        print("Error occurred while ordering locations:", e)
+        raise e
 
 
 def estimate_budget(user_query, location_objs):
     print("\n\nInside estimate_budget function call")
-
     llm = MAIN_LLM
     budget_items = []
     total_budget = 0
-    for loc in location_objs:
-        prompt = BUDGET_ESTIMATION_PROMPT + f"\n\nLocation: {loc.address}\n\nUser query: {user_query}"
-        result = llm_with_web_search(prompt, llm)
-        items = remove_json_prefix_list(result)
-        for item in items:
-            reason = getattr(item, 'item', item.get('item') if isinstance(item, dict) else None)
-            if reason is None:
-                reason = ""
-            amount = getattr(item, 'cost', item.get('cost') if isinstance(item, dict) else None)
-            if amount is None:
-                amount = 0
-            budget_items.append(BudgetItem(reason=str(reason), amount=amount))
-            total_budget += amount
-    # print("\nCompleted estimated_budget function call")
-    return budget_items, total_budget
+    try:
+        for loc in location_objs:
+            prompt = BUDGET_ESTIMATION_PROMPT + f"\n\nLocation: {loc.address}\n\nUser query: {user_query}"
+            result = llm_with_web_search(prompt, llm)
+            items = remove_json_prefix_list(result)
+            for item in items:
+                reason = getattr(item, 'item', item.get('item') if isinstance(item, dict) else None)
+                if reason is None:
+                    reason = ""
+                amount = getattr(item, 'cost', item.get('cost') if isinstance(item, dict) else None)
+                if amount is None:
+                    amount = 0
+                budget_items.append(BudgetItem(reason=str(reason), amount=amount))
+                total_budget += amount
+        return budget_items, total_budget
+    except Exception as e:
+        print("Error occurred while estimating budget:", e)
+        return budget_items, total_budget
+
 
 def node1_pipeline(user_query: str, user_provided_locations: Optional[List[userSpecifiedLocation]] = []):
     print("\n\nInside the node1_pipeline function")
@@ -177,23 +187,16 @@ def node1_pipeline(user_query: str, user_provided_locations: Optional[List[userS
 
         # 1. Extract locations (LLM + web_search)
         locations_info = extract_locations(user_query)
-        
+        print("Final Extracted Locations info:", locations_info)
 
-        final_locations_info_raw = format_locations(user_query, locations_info)
-
-        final_locations_info = [
-            GeoAPILocInput(**loc) for loc in final_locations_info_raw
-            if isinstance(loc, dict) and
-                "name_canonical" in loc and loc["name_canonical"] and
-                "geocode_text" in loc and loc["geocode_text"] and
-                "name_original" in loc and loc["name_original"]
-        ]
+        final_locations_info = format_locations(user_query, locations_info)
+        print("Final Formatted Locations info:", final_locations_info)
 
         suitable_time_opening = extract_suitable_time(user_query, final_locations_info)
 
         # 2. Geocode locations
         location_objs = geocode_locations_service(final_locations_info)
-        # print("The extracted geo coordinates:", location_objs)
+        print("The extracted geo coordinates:", location_objs)    
         # 3. Fetch routes
         routes = fetch_routes_metadata(location_objs)
 

@@ -10,7 +10,7 @@ import api from "../api/api";
 const MapView = () => {
   // console.log("MapView is Mounting");
   const mapRef = useRef(null);
-  const { mapCenter, setMapCenter, setSearchResults, setSelectedLocations } =
+  const { mapCenter, setMapCenter, setSearchResults, setSelectedLocations, itineary } =
     useContext(MapContext);
 
   useEffect(() => {
@@ -117,6 +117,14 @@ const MapView = () => {
     // Doing below because we just need to set the selectedLocations for now no need to remove them
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapCenter, setMapCenter, setSearchResults]);
+
+  useEffect(()=>{
+    if( !itineary || !mapRef.current) return ;
+    
+    const layer  = L.geoJSON(itineary).addTo(mapRef.current);
+    mapRef.current.fitBounds(layer.getBounds());
+    console.log("Inside the useEffect for itineary", itineary.geometry.coordinates?.[0]?.[0])
+  }, [itineary])
 
   useEffect(() => {
     const func = async () => {

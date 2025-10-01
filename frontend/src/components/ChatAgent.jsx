@@ -11,7 +11,7 @@ const ChatAgent = () => {
   const [loading, setLoading] = useState(false);
   // const [table, setTable] = useState({});
   // const {  } = useContext(MapContext);
-  const { setSearchResults, selectedLocations } = useContext(MapContext);
+  const { setSearchResults, selectedLocations, setItineary } = useContext(MapContext);
 
   const handleSend = async () => {
     if (!prompt.trim()) return;
@@ -28,11 +28,24 @@ const ChatAgent = () => {
       // console.log(reqObj)
       const res = await api.getItinerary(reqObj);
       // console.log(res)
-      // console.log("Result from Itinery:", res);
+      console.log("Result from Itinery:", res);
       // setResponse(res.data.itinerary.final_text);
-      setSearchResults(res.itinerary.locations);
+      //  {address: 'Jaipur', lat: 26.9154576, lng: 75.8189817, uuid: 'a9dd0e1a-25d1-4929-b31d-3949c0f73cc3'}
 
-      const agentResponse = res.itinerary.final_text;
+
+      // setSearchResults(res?.itinerary?.locations);
+      setSearchResults(res?.itinerary?.locations?.map((loc)=> {
+        return {
+          address: loc.address,
+          lat: parseFloat(loc.lat),
+          lng: parseFloat(loc.lng),
+          source: "Agent",
+        }
+      }));
+
+      const agentResponse = res?.itinerary?.final_text;
+
+      setItineary(res?.api_result_itineraries?.features[0])
       setChatHistory((prev) => [
         ...prev,
         { user: prompt, agent: agentResponse },
@@ -81,7 +94,7 @@ const ChatAgent = () => {
         <div
           className={classes.selectedChatDetail}
           style={{
-            maxHeight: "200px",
+            maxHeight: "38vh",
             overflowY: "auto",
             marginTop: "10px",
             border: "1px solid #ddd",

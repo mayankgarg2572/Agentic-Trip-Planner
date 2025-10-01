@@ -1,17 +1,20 @@
 from typing import List
 from langchain_community.tools.tavily_search import TavilySearchResults
-web_search_tool = TavilySearchResults(k=3)
 
-
+tool = TavilySearchResults(max_results=3)
 
 def web_search_service(query: str) -> List[str]:
-    print("\n\nInside the web_search_service_function, with args:", query)
-    web_results = []
     try:
-        docs = web_search_tool.invoke({"query": query})
-        web_results = [d["content"] for d in docs]
+        # Use the tool-call form to get a ToolMessage with .artifact["results"]
+        msg = tool.invoke({
+            "name": "tavily", "type": "tool_call", "id": "t1",
+            "args": {"query": query}
+        })
+        # print(msg)
+        results = getattr(msg, "artifact", {}).get("results", [])
+        # print("Sample results from web search for query:", query, "\n\nResult:\n", results[:min(3, len(results))])
+        return [r.get("content", "") for r in results]
     except Exception as e:
         print("Getting error:", e)
-    print("\nWeb_search_service response completed")
-    return web_results
+        return []
 

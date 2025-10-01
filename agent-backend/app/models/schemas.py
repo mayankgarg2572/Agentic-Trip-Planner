@@ -1,11 +1,46 @@
 from pydantic import BaseModel
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict 
+from enum import Enum
+
+class BaseLocType(Enum):
+    tourist_spot = 'tourist_spot'
+    destination = 'destination'
+    accommodation = 'accommodation'
+
+class GeoCodeType(Enum):
+    city = "city"
+    amenity="amenity"
+    locality="locality"
+    street="street"
+    unknown="unknown"
+
+
 
 class Location(BaseModel):
     address: str
     lat: float
     lng: float
     uuid: str
+
+
+class BaseLocInfo(BaseModel):
+    name: str
+    type: BaseLocType
+
+
+class GeoAPILocInput(BaseModel):
+    name_original: str
+    name_canonical: str 
+    geocode_type: GeoCodeType = GeoCodeType.unknown
+    country: Optional[str] = None
+    state: Optional[str] = None
+    city: Optional[str] = None
+    postcode: Optional[str] = None
+    locality: Optional[str] = None
+    inside_of: Optional[str] = None
+    nearby: Optional[str] = None
+    geocode_text: str
+    sources:  List[str] = []
 
 class RouteMetadata(BaseModel):
     from_location: str

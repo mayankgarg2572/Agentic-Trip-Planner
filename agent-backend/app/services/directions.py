@@ -13,12 +13,12 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
     print("\n\nInside the fetch_route_metadata function")
     route_metadata = []
     for i, origin in enumerate(locations):
-        if _valid_coord(origin.lat, origin.lng ) :
+        if not _valid_coord(origin.lat, origin.lng ) :
             print("Negative coordinates:", origin)
             continue
         for j in range(i+1, len(locations)):
             dest =  locations[j]
-            if _valid_coord(dest.lat, dest.lng )  :
+            if not _valid_coord(dest.lat, dest.lng )  :
                 continue 
             url = (
                 f"https://api.geoapify.com/v1/routing"
@@ -41,7 +41,7 @@ def fetch_routes_metadata(locations: List[Location]) -> List[RouteMetadata]:
             except Exception as e:
                 print(f"For origin:{origin},\nand destination:{dest}\ngetting error:",e )
                     
-    print("\nReturning from fetch_route_metadata function")
+    # print("\nReturning from fetch_route_metadata function")
     return route_metadata
 
 
@@ -70,7 +70,7 @@ def fetch_complete_itinerary(locations: List[Location]) -> object:
     except Exception as e:
         print(f"For complete itineraries finding, getting error:",e )
         return None
-    print("Completed result from geoApify Complete Itineraries Route.\n\n")
+    # print("Completed result from geoApify Complete Itineraries Route.\n\n")
     return data
 
 import httpx, math, random, time

@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_agent(request: ChatRequest) -> ChatResponse:
-    print("\n\nReceived request at /chat endpoint with data:", request)
+    # print("\n\nReceived request at /chat endpoint with data:", request)
     final_agent_state = compiled_agent_graph.invoke(
         AgentState(
             user_query=request.prompt, 

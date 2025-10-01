@@ -20,7 +20,7 @@ const ResultsSidebar = ({ onClose }) => {
       <p>Search Results</p>
       <button onClick={onClose}>✖️</button>
       <ul style={{ listStyle: 'none', padding: 0 }}>
-        {searchResults.map((result, idx) => (
+        {searchResults?.map((result, idx) => (
           <li key={idx}
               className={styles.resultLIstElement}
               >

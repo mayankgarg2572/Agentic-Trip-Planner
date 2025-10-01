@@ -29,5 +29,5 @@ class VerificationNode:
             state['fallback_count']+=1
         else:
             state["verified"] = True
-        print("\nCompleted Node 2")
+        # print("\nCompleted Node 2")
         return state

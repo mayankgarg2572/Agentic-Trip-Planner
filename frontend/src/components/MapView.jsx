@@ -10,8 +10,48 @@ import api from "../api/api";
 const MapView = () => {
   // console.log("MapView is Mounting");
   const mapRef = useRef(null);
-  const { mapCenter, setMapCenter, setSearchResults, setSelectedLocations, itineary } =
+  const overlayRef  =  useRef(null);
+  const { mapCenter, setMapCenter, setSelectedLocations, itinerary} =
     useContext(MapContext);
+
+  useEffect(() => {
+    if (!mapRef.current) {
+      return 
+    }
+    
+    if (mapCenter.lat && mapCenter.lng) {
+      mapRef.current.setView([mapCenter.lat, mapCenter.lng], 16);
+    }
+
+    
+
+    
+    
+  }, [mapCenter]);
+
+  useEffect(()=>{
+    // console.log("Inside Set Itineary use effect in MapView.jsx")
+    if( !overlayRef.current || !mapRef.current) return ;
+    overlayRef.current.clearLayers()
+
+    if(!itinerary) return;
+
+    const route  = L.geoJSON(itinerary).addTo(overlayRef.current);
+   
+    itinerary?.properties?.waypoints?.forEach?.(wp => 
+      typeof wp?.location?.[0] === 'number' && typeof wp?.location?.[1] === 'number'  && L.marker([wp?.location?.[0], wp?.location?.[1]]).addTo(overlayRef.current)
+    );
+    try {
+      mapRef.current.fitBounds(route.getBounds(), {padding: [20, 20]} ); 
+    } catch (error) {
+      console.log("Getting Error in applying bound in Route:", route)
+
+    }
+    
+    // console.log("Inside the useEffect for itineary", itinerary.geometry.coordinates?.[0]?.[0])
+
+
+  }, [itinerary])
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -88,45 +128,19 @@ const MapView = () => {
                 }
               }, 0);
             });
-
-            // Add the marker to the map
             marker.addTo(mapRef.current);
-
-            // console.log("The saving object", e.latlng);
-
-            // Save location via API
-            // const saveLocation = async () => {
-            //   try {
-            //     await api.saveMarkerLocation(e.latlng.lat, e.latlng.lng);
-            //   } catch (err) {
-            //     console.error("Issue in saving the marked Location:", err);
-            //   }
-            // };
-            // saveLocation();
-
-            // Return the updated locations array
             return [...prevLocations, newMarker];
           });
 
           mapRef.current.closePopup();
         };
       });
-    } else if (mapCenter.lat && mapCenter.lng) {
-      mapRef.current.setView([mapCenter.lat, mapCenter.lng], 16);
     }
-    // Doing below because we just need to set the selectedLocations for now no need to remove them
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapCenter, setMapCenter, setSearchResults]);
 
-  useEffect(()=>{
-    if( !itineary || !mapRef.current) return ;
-    
-    const layer  = L.geoJSON(itineary).addTo(mapRef.current);
-    mapRef.current.fitBounds(layer.getBounds());
-    console.log("Inside the useEffect for itineary", itineary.geometry.coordinates?.[0]?.[0])
-  }, [itineary])
+    if(!overlayRef.current){
+      overlayRef.current = L.layerGroup().addTo(mapRef.current)
+    }
 
-  useEffect(() => {
     const func = async () => {
       try {
         const data = await api.getLatLongForIP();
@@ -150,6 +164,11 @@ const MapView = () => {
     func();
     // called = true;
     // }
+
+    return () => {
+      mapRef.current?.remove();
+      overlayRef.current = null;
+    }
   }, []);
 
   return <div id="map" style={{ height: "100%", width: "100%" }} />;

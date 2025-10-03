@@ -11,7 +11,8 @@ const ChatAgent = () => {
   const [loading, setLoading] = useState(false);
   // const [table, setTable] = useState({});
   // const {  } = useContext(MapContext);
-  const { setSearchResults, selectedLocations, setItineary } = useContext(MapContext);
+  const { setSearchResults, selectedLocations, setItinerary } =
+    useContext(MapContext);
 
   const handleSend = async () => {
     if (!prompt.trim()) return;
@@ -25,40 +26,39 @@ const ChatAgent = () => {
           lng: loc.lng,
         })),
       };
-      // console.log(reqObj)
+
       const res = await api.getItinerary(reqObj);
-      // console.log(res)
       console.log("Result from Itinery:", res);
-      // setResponse(res.data.itinerary.final_text);
-      //  {address: 'Jaipur', lat: 26.9154576, lng: 75.8189817, uuid: 'a9dd0e1a-25d1-4929-b31d-3949c0f73cc3'}
 
-
-      // setSearchResults(res?.itinerary?.locations);
-      setSearchResults(Array.isArray(res?.itinerary?.locations)? res.itinerary.locations.map((loc)=> {
-        return {
-          address: loc.address,
-          lat: parseFloat(loc.lat),
-          lng: parseFloat(loc.lng),
-          source: "Agent",
-        }
-      })
-      : []
-    );
+      setSearchResults(
+        Array.isArray(res?.itinerary?.locations)
+          ? res.itinerary.locations.map((loc) => {
+              return {
+                address: loc.address,
+                lat: parseFloat(loc.lat),
+                lng: parseFloat(loc.lng),
+                source: "Agent",
+              };
+            })
+          : []
+      );
 
       const agentResponse = res?.itinerary?.final_text;
 
-      setItineary(res?.api_result_itineraries?.features?.[0]?? null)
+      setItinerary(res?.api_result_itineraries?.features?.[0] ?? null);
       setChatHistory((prev) => [
         ...prev,
         { user: prompt, agent: agentResponse },
       ]);
-      
     } catch (error) {
       console.error("LLM Error:", error);
-      setSearchResults([])
+      setSearchResults([]);
       setChatHistory((prev) => [
         ...prev,
-        { user: prompt, agent: "Something went wrong while processing your query" },
+        {
+          user: prompt,
+          agent: "Something went wrong while processing your query",
+        },
       ]);
     }
     setPrompt("");

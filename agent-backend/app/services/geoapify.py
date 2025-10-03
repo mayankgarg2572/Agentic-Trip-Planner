@@ -6,7 +6,7 @@ from app.utils.helpers import generate_uuid
 from app.core.config import GEOAPIFY_API_KEY
 
 def set_url(address: GeoAPILocInput) -> str:
-    print("\n\nInside set_url function")
+    # print("Inside set_url function")
     url = f"https://api.geoapify.com/v1/geocode/search?"
     try:
         if address.geocode_text:
@@ -64,8 +64,10 @@ def geocode_locations_service(locations: List[GeoAPILocInput]):
     Returns:
         List[Location]: A list of Location objects with geocoded coordinates.
     """
-
     print("\n\nInside geocode_locations_service function")
+    if len(locations) == 0:
+        print("No locations to geocode.")
+        return []
     geo_results = []    
     for loc in locations:
         loc_info = geocode_addresses(loc)
@@ -79,6 +81,9 @@ def geocode_locations_service(locations: List[GeoAPILocInput]):
 # Lets access the address of the locations specified by user using their coordinates
 def reverse_geocode_coordinates(coords: List[userSpecifiedLocation]) -> List[Location]:
     print("\n\nInside reverse_geocode_coordinates function")
+    if len(coords) == 0:
+        print("No coordinates to reverse geocode.")
+        return []
     results = []
     for coord in coords:
         lat = coord.lat

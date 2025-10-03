@@ -110,4 +110,4 @@ class RotatingGemini(BaseChatModel):
 # ───────────────────────────────────────────────────────────────────────────────
 MAIN_LLM   = RotatingGemini(model_name = "gemini-2.0-flash")
 
-SUPPORTIVE_LLM  = RotatingGemini(model_name = "gemini-2.5-flash")
+SUPPORTIVE_LLM  = RotatingGemini(model_name = "gemini-1.5-flash")

@@ -1,7 +1,7 @@
 from hmac import new
 from exceptiongroup import catch
 from app.utils.llm import MAIN_LLM
-from app.services.directions import fetch_complete_itinerary, fetch_routes_metadata
+from app.services.directions import build_pairwise_air_distance, fetch_complete_itinerary, fetch_routes_metadata
 from app.services.web_search import web_search_service
 from langchain.tools import Tool
 from app.models.schemas import BaseLocInfo, BudgetItem, GeoAPILocInput, userSpecifiedLocation
@@ -84,9 +84,13 @@ def extract_locations(user_query: str) -> List[BaseLocInfo]:
         f"\nUser query: {user_query}\n"
     )
     try:
-
         content = llm_with_web_search(prompt, llm)
         locations = remove_json_prefix_list(content)
+        no_of_attempts = 0
+        while (len(locations) == 0) and no_of_attempts < 2:
+            content = correct_final_llm_response_format(prompt, llm, content)
+            locations = remove_json_prefix_list(content)
+            no_of_attempts += 1
         locations =  [BaseLocInfo(**loc) for loc in locations if isinstance(loc, dict) and "name" in loc and "type" in loc]
         return locations
     except Exception as e:
@@ -94,6 +98,21 @@ def extract_locations(user_query: str) -> List[BaseLocInfo]:
         raise e
 
     
+def correct_final_llm_response_format(prompt:str, llm, final_llm_result:str) -> str:
+    print("\n\nInside the correct_final_llm_response_format function")
+    prompt = (
+            "The previous response was not in the correct format. Please correct it. And you must only provide the response, no explanatory text or nothing else.\n\n"
+            f"Previous response: {final_llm_result}\n\n"
+            f"Correct format instructions: {prompt}\n\n"
+            "Please provide the corrected response now(you have to only consider the format, and must not make any change in the response value and also do not provide any other explanatory text or context)."
+        )
+    try:
+        content = llm.invoke(prompt)
+        content = content.content if hasattr(content, "content") else str(content)
+        return content
+    except Exception as e:
+        print("Error occurred while correcting the format:", e)
+        raise e
 
 
 def format_locations(user_query:str, locations: List[BaseLocInfo]) -> List[GeoAPILocInput]:
@@ -187,22 +206,27 @@ def node1_pipeline(user_query: str, user_provided_locations: Optional[List[userS
 
         # 1. Extract locations (LLM + web_search)
         locations_info = extract_locations(user_query)
-        print("Final Extracted Locations info:", locations_info)
+        # print("Final Extracted Locations info:", locations_info)
 
         final_locations_info = format_locations(user_query, locations_info)
-        print("Final Formatted Locations info:", final_locations_info)
+        # print("Final Formatted Locations info:", final_locations_info)
 
         suitable_time_opening = extract_suitable_time(user_query, final_locations_info)
 
         # 2. Geocode locations
         location_objs = geocode_locations_service(final_locations_info)
-        print("The extracted geo coordinates:", location_objs)    
+        # print("The extracted geo coordinates:", location_objs)    
         # 3. Fetch routes
-        routes = fetch_routes_metadata(location_objs)
+        routes = build_pairwise_air_distance(location_objs)   # fast, offline
+
+        # 4. Order locations (unchanged call)
+        ordered_locations = order_locations(location_objs, routes, suitable_time_opening, user_query)
+
+        # (Optional, precise legs for UI or final prompt)
+        # final_leg_routes = fetch_routes_metadata(ordered_locations, adjacent_only=True)
 
         complete_itineraries = fetch_complete_itinerary(location_objs)
-        # 4. Order locations (LLM + web_search)
-        ordered_locations = order_locations(location_objs, routes, suitable_time_opening, user_query)
+
         
         # 5. Estimate budget (LLM + web_search)
         budget_items, total_budget = estimate_budget(user_query, ordered_locations)
@@ -213,7 +237,6 @@ def node1_pipeline(user_query: str, user_provided_locations: Optional[List[userS
         # 6. Format response
         response = {
             "location_to_mark_on_ui": [loc.dict() for loc in ordered_locations],
-            "location_order_for_showing_route_on_ui": [str(loc.uuid) for loc in ordered_locations],
             "chat_response": final_chat_response.content,
             "budget_table": {
                 "total_budget": total_budget,
@@ -225,7 +248,6 @@ def node1_pipeline(user_query: str, user_provided_locations: Optional[List[userS
         print("Getting error in node1_pipeline:", e)
         response = {
             "location_to_mark_on_ui": [],
-            "location_order_for_showing_route_on_ui": [],
             "chat_response": f"Sorry, an error occurred while processing your request: {e}",
             "budget_table": {
                 "total_budget": 0,

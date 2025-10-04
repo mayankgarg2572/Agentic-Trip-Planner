@@ -1,8 +1,10 @@
 from langgraph.graph import StateGraph, END
 from pydantic import BaseModel
 from typing import List, Any, Mapping, Optional
-from app.agent.nodes import ExtractionGenerationNode, VerificationNode
+from app.agent.nodes import ExtractionGenerationNode, VerificationNode, QuickFixNode
 from app.models.schemas import Location, userSpecifiedLocation
+
+quick_fix_node = QuickFixNode()
 
 class BudgetElement(BaseModel):
     item: str
@@ -23,6 +25,7 @@ class AgentState(BaseModel):
     feedback:str=""
     verified:bool=False
     api_result_itineraries:object=None
+    fix_code: str = ""
 
     def get(self, key: str, default: Any = None) -> Any:
         """Allow dict-style .get() with a fallback."""
@@ -55,26 +58,45 @@ class AgentState(BaseModel):
 extraction_generation_node = ExtractionGenerationNode()
 verification_node = VerificationNode()
 
+# def verification_conditional(state: AgentState) -> str:
+#     print("\n\nInside the verification_conditional condition edge function, with fallback count:",state.fallback_count)
+#     if getattr(state, "verified", False):
+#         return "end"
+#     elif state.fallback_count < 2:
+#         return "retry_extraction_generation"
+#     else:
+#         return "end"
+
 def verification_conditional(state: AgentState) -> str:
-    print("\n\nInside the verification_conditional condition edge function, with fallback count:",state.fallback_count)
+    print("\n\nInside the verification_conditional condition edge function, with fallback count:", state.fallback_count)
     if getattr(state, "verified", False):
         return "end"
-    elif state.fallback_count < 2:
+    # 1st failure → try cheap QuickFix (no heavy recompute)
+    if state.fallback_count == 1:
+        return "quick_fix"
+    # 2nd failure → one full retry of Node 1
+    elif state.fallback_count == 2:
         return "retry_extraction_generation"
     else:
         return "end"
 
+
 agent_graph = StateGraph(AgentState)
 agent_graph.add_node("extraction_generation", extraction_generation_node)
 agent_graph.add_node("verification", verification_node)
+agent_graph.add_node("quick_fix", quick_fix_node)
+agent_graph.add_edge("quick_fix", "verification")
+
 agent_graph.set_entry_point("extraction_generation")
 agent_graph.add_edge("extraction_generation", "verification")
 agent_graph.add_conditional_edges(
     "verification",
     verification_conditional,
     {
+        "quick_fix": "quick_fix",
         "retry_extraction_generation": "extraction_generation",
         "end": END
     }
 )
+
 compiled_agent_graph = agent_graph.compile()

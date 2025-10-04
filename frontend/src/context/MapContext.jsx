@@ -8,8 +8,10 @@ export const MapProvider = ({ children }) => {
   const [selectedLocations, setSelectedLocations] = useState([])
   const [itinerary, setItinerary] = useState()
 
+  const [agentMapResults, setAgentMapResults] = useState([])
+
   return (
-    <MapContext.Provider value={{ mapCenter, setMapCenter, searchResults, setSearchResults, selectedLocations, setSelectedLocations, itinerary, setItinerary }}>
+    <MapContext.Provider value={{ mapCenter, setMapCenter, searchResults, setSearchResults, selectedLocations, setSelectedLocations, itinerary, setItinerary, agentMapResults, setAgentMapResults }}>
       {children}
     </MapContext.Provider>
   );

@@ -32,6 +32,54 @@
   transition: color 0.3s ease;
 }
 
+/*
+  How should I provide CSS to the div element:
+  <div className={styles.resultType}>
+        <label>
+          <input
+            type="radio"
+            checked={resultType === "search"}
+            onChange={() => setResultType("search")}
+          />
+          Search Results
+        </label>
+        <label>
+          <input
+            type="radio"
+            checked={resultType === "agent"}
+            onChange={() => setResultType("agent")}
+          />
+          Agent Results
+        </label>
+      </div>
+  */
+
+.resultType {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  margin-top: 1rem;
+}
+
+.resultType label {
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.resultType input[type="radio"] {
+  margin-right: 0.5rem;
+}
+
+.resultType button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+
 .resultSideBar button:hover {
   color: #ff0000;
 }
@@ -101,4 +149,22 @@
   .resultLIstElement div {
     font-size: 0.9rem;
   }
+
+  /* 
+  Similarly here I want to apply the CSS for android viewers for the resultType class and its children
+
+
+  */
+
+  .resultType {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .resultType label {
+    margin-bottom: 0.5rem;
+  }
+  .resultType input[type="radio"] {
+    margin-right: 0.3rem;
+  }
+  
 }

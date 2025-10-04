@@ -1,12 +1,11 @@
-from hmac import new
-from exceptiongroup import catch
-from app.utils.llm import MAIN_LLM
-from app.services.directions import build_pairwise_air_distance, fetch_complete_itinerary, fetch_routes_metadata
-from app.services.web_search import web_search_service
-from langchain.tools import Tool
+from typing import List, Optional
+
 from app.models.schemas import BaseLocInfo, BudgetItem, GeoAPILocInput, userSpecifiedLocation
+
+from app.services.directions import build_pairwise_air_distance, fetch_complete_itinerary
+from app.services.web_search import llm_with_web_search
 from app.services.geoapify import geocode_locations_service, reverse_geocode_coordinates
-import json
+
 from app.agent.prompts import (
     LOCATION_EXTRACTION_PROMPT,
     GEOAPIFY_INPUT_PREP_PROMPT,
@@ -15,66 +14,11 @@ from app.agent.prompts import (
     TIME_OPENING_FINDER,
     ROUTE_RECOMMENDATION_PROMPT
 )
-from typing import Any, Dict, List, Optional
 
+from app.utils.clean_load_json import remove_json_prefix_list, _PARSE_FAILED
+from app.utils.helpers import correct_final_llm_response_format
+from app.utils.llm import MAIN_LLM
 
-def llm_with_web_search(prompt, llm, max_loops=2):
-    final_content = [""]
-    print(f"Inside llm_with_web_search")
-    for _ in range(max_loops+1):
-        
-        result = llm.invoke(prompt)
-        
-        content = result.content if hasattr(result, "content") else str(result)
-        content = content.strip()
-        if content.startswith("search:"):
-            content = content.replace('"', '').replace("'", '')
-            search_query = content[len("search:"):].strip()
-            # also need to remove the things like " or ' or from the content
-            search_results = web_search_service(search_query)
-            final_content+=search_results
-            if _ == max_loops -1 :
-                prompt += f"\n\nWeb search results for '{search_query}': {search_results}\n\n\nNow, since this was your final query, now please craft the response for the asked task and the response must be in the specified format only."
-
-            else:
-                prompt += f"\n\nWeb search results for '{search_query}': {search_results}\nNow, based on this, continue."
-        elif content.startswith("final_response:"):
-            return content[len("final_response:"):].strip()
-        else:
-            return content
-    print("Not able to complete the web search, too much calls, sample final content(max 3):", final_content[:min(len(final_content), 3)])
-    return " ".join(final_content)
-
-def remove_json_prefix_list(content: str) -> List[Any]:
-    if isinstance(content, str):
-        content = content.strip()
-        if content.startswith("```json"):
-            content = content[len("```json"):].strip()
-        if content.startswith("```"):
-            content = content[len("```"):].strip()
-        if content.endswith("```"):
-            content = content[:-len("```")].strip()
-        try:
-            locations = json.loads(content)
-            return locations
-        except Exception:
-            return []
-    elif isinstance(content, list):
-        return content
-    else:
-        return []
-
-
-from collections.abc import Mapping
-
-def to_base_loc(loc) -> Optional[BaseLocInfo]:
-    if isinstance(loc, BaseLocInfo):
-        return loc
-    if hasattr(loc, "name") and hasattr(loc, "type"):
-        return BaseLocInfo(name=loc.name, type=loc.type)
-    if isinstance(loc, Mapping) and "name" in loc and "type" in loc:
-        return BaseLocInfo(name=loc["name"], type=loc["type"])
-    return None  # fallback: leave as-is
 
 def extract_locations(user_query: str) -> List[BaseLocInfo]:
     print("\n\nInside the extract_locations function")
@@ -85,33 +29,18 @@ def extract_locations(user_query: str) -> List[BaseLocInfo]:
     )
     try:
         content = llm_with_web_search(prompt, llm)
-        locations = remove_json_prefix_list(content)
+        result = remove_json_prefix_list(content)
+        locations = [] if (result is _PARSE_FAILED) else result
         no_of_attempts = 0
         while (len(locations) == 0) and no_of_attempts < 2:
             content = correct_final_llm_response_format(prompt, llm, content)
-            locations = remove_json_prefix_list(content)
+            result = remove_json_prefix_list(content)
+            locations = [] if (result is _PARSE_FAILED) else result
             no_of_attempts += 1
         locations =  [BaseLocInfo(**loc) for loc in locations if isinstance(loc, dict) and "name" in loc and "type" in loc]
         return locations
     except Exception as e:
         print("Error occurred while extracting locations:", e)
-        raise e
-
-    
-def correct_final_llm_response_format(prompt:str, llm, final_llm_result:str) -> str:
-    print("\n\nInside the correct_final_llm_response_format function")
-    prompt = (
-            "The previous response was not in the correct format. Please correct it. And you must only provide the response, no explanatory text or nothing else.\n\n"
-            f"Previous response: {final_llm_result}\n\n"
-            f"Correct format instructions: {prompt}\n\n"
-            "Please provide the corrected response now(you have to only consider the format, and must not make any change in the response value and also do not provide any other explanatory text or context)."
-        )
-    try:
-        content = llm.invoke(prompt)
-        content = content.content if hasattr(content, "content") else str(content)
-        return content
-    except Exception as e:
-        print("Error occurred while correcting the format:", e)
         raise e
 
 
@@ -125,7 +54,8 @@ def format_locations(user_query:str, locations: List[BaseLocInfo]) -> List[GeoAP
     )
     try:
         content = llm_with_web_search(prompt, llm)
-        new_locations = remove_json_prefix_list(content)
+        result = remove_json_prefix_list(content)
+        new_locations = [] if (result is _PARSE_FAILED) else result
         new_locations = [
             GeoAPILocInput(**loc) for loc in new_locations
             if isinstance(loc, dict) and
@@ -146,8 +76,10 @@ def extract_suitable_time(user_query: str, locations: list[GeoAPILocInput]) -> s
     prompt = TIME_OPENING_FINDER + "\n\nUser query:" + f"{user_query}\n\nLocations: {locations}."
     
     try:
-        result = llm_with_web_search(prompt, llm)
-        timings = remove_json_prefix_list(result)
+        content = llm_with_web_search(prompt, llm)
+        result = remove_json_prefix_list(content)
+        timings = [] if (result is _PARSE_FAILED) else result
+        
     except Exception as e:
         print("Error occurred while extracting suitable time:", e)
         timings = None
@@ -161,8 +93,9 @@ def order_locations(location_objs, routes, suitable_time_opening, user_query):
     prompt = ROUTE_ORDER_PROMPT + f"\n\nUser query: {user_query}\n\nLocations: {names}\n\nRoutes General info between different Locations:{routes}\n\nSuitable opening times of tourists spots: {suitable_time_opening}"
     result = llm.invoke(prompt)
     try:
-        result = llm_with_web_search(prompt, llm)
-        ordered_names = remove_json_prefix_list(result)
+        content = llm_with_web_search(prompt, llm)
+        result = remove_json_prefix_list(content)
+        ordered_names = [] if (result is _PARSE_FAILED) else result
         ordered = [loc for name in ordered_names for loc in location_objs if loc.address == name]
         return ordered
     except Exception as e:
@@ -178,8 +111,10 @@ def estimate_budget(user_query, location_objs):
     try:
         for loc in location_objs:
             prompt = BUDGET_ESTIMATION_PROMPT + f"\n\nLocation: {loc.address}\n\nUser query: {user_query}"
-            result = llm_with_web_search(prompt, llm)
-            items = remove_json_prefix_list(result)
+            content = llm_with_web_search(prompt, llm)
+            result = remove_json_prefix_list(content)
+            items = [] if (result is _PARSE_FAILED) else result
+            
             for item in items:
                 reason = getattr(item, 'item', item.get('item') if isinstance(item, dict) else None)
                 if reason is None:
@@ -206,18 +141,18 @@ def node1_pipeline(user_query: str, user_provided_locations: Optional[List[userS
 
         # 1. Extract locations (LLM + web_search)
         locations_info = extract_locations(user_query)
-        # print("Final Extracted Locations info:", locations_info)
+
 
         final_locations_info = format_locations(user_query, locations_info)
-        # print("Final Formatted Locations info:", final_locations_info)
+
 
         suitable_time_opening = extract_suitable_time(user_query, final_locations_info)
 
         # 2. Geocode locations
         location_objs = geocode_locations_service(final_locations_info)
-        # print("The extracted geo coordinates:", location_objs)    
+  
         # 3. Fetch routes
-        routes = build_pairwise_air_distance(location_objs)   # fast, offline
+        routes = build_pairwise_air_distance(location_objs)
 
         # 4. Order locations (unchanged call)
         ordered_locations = order_locations(location_objs, routes, suitable_time_opening, user_query)

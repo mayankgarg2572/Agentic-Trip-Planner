@@ -11,7 +11,7 @@ const ChatAgent = () => {
   const [loading, setLoading] = useState(false);
   // const [table, setTable] = useState({});
   // const {  } = useContext(MapContext);
-  const { setSearchResults, selectedLocations, setItinerary } =
+  const { setSearchResults, selectedLocations, setItinerary, agentMapResults, setAgentMapResults } =
     useContext(MapContext);
 
   const handleSend = async () => {
@@ -30,7 +30,7 @@ const ChatAgent = () => {
       const res = await api.getItinerary(reqObj);
       console.log("Result from Itinery:", res);
 
-      setSearchResults(
+      setAgentMapResults(
         Array.isArray(res?.itinerary?.locations)
           ? res.itinerary.locations.map((loc) => {
               return {
@@ -52,7 +52,7 @@ const ChatAgent = () => {
       ]);
     } catch (error) {
       console.error("LLM Error:", error);
-      setSearchResults([]);
+      setAgentMapResults([]);
       setChatHistory((prev) => [
         ...prev,
         {

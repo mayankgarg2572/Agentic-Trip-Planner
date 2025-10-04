@@ -196,6 +196,8 @@ class VerificationNode:
 class QuickFixNode:
     def __call__(self, state):
         # If Node 2 didn’t suggest a specific fix, do nothing
+        print("Inside node 3 for Quick fix with:\nfeedback:", state.get("feedback") or "none")
+        print("\nChat response was:", state.get("chat_response", ""))
         fix = (state.get("fix_code") or "none")
         prior = state.get("chat_response", "")
         if fix == "none":

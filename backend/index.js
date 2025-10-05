@@ -23,6 +23,11 @@ app.use(cors(corsOptions));
 
 // Routes
 app.use('/api', locationRoutes);
+app.get('/state',(req, res)=>{
+  res.send({
+    "status":"good"
+  })
+} )
 
 // Connect to Database and Start Server
 const PORT = process.env.PORT || 5000;

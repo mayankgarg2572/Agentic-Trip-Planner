@@ -1,26 +1,29 @@
 import axios from "axios";
 
-import { API_BASE, AGENTIC_API_BASE, AGENTIC_API_STATUS } from "./config";
+import { SEARCH_API_BASE, AGENTIC_API_BASE, AGENTIC_API_STATUS, SEARCH_API_BASE_STATUS } from "./config";
 
 const api = {
   startServer: async () => {
     try{
-      const response =  await axios.get(`${AGENTIC_API_STATUS}/`)
-      
-      if (response.data.status !== 'good') {
-        console.log(response.data.status)
-        const error = "Some issue arises in the server"
-        throw error  
-      }
+      const agentResponse =  await axios.get(`${AGENTIC_API_STATUS}/`)
+      console.log("Agent status:", agentResponse.data)
     }
     catch(error){
-      console.log("Some error in accessing the server:")
-      throw error
+      console.log("Some error in accessing the agent-server:", error)
+      // throw error
+    }
+
+    try{
+      const searchResponse = await axios.get(`${SEARCH_API_BASE_STATUS}`)
+      console.log("Search status:", searchResponse.data)
+    }
+    catch(err){
+      console.log("Some error in accessing the search-server:", err)
     }
   },
   searchLocation: async (address) => {
     try {
-      const response = await axios.post(`${API_BASE}/search-location`, {
+      const response = await axios.post(`${SEARCH_API_BASE}/search-location`, {
         address,
       });
       return response.data;
@@ -32,7 +35,7 @@ const api = {
 
   saveMarkerLocation: async (latitude, longitude) => {
     try {
-      const response = await axios.post(`${API_BASE}/save-marker-location`, {
+      const response = await axios.post(`${SEARCH_API_BASE}/save-marker-location`, {
         latitude,
         longitude,
       });
@@ -56,7 +59,7 @@ const api = {
   searchLocationMultiple: async (address) => {
     try {
       const response = await axios.post(
-        `${API_BASE}/search-location-multiple`,
+        `${SEARCH_API_BASE}/search-location-multiple`,
         { address }
       );
       return response.data;

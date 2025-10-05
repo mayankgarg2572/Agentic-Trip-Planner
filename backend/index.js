@@ -13,7 +13,7 @@ app.use(express.json());
 
 
 const corsOptions = {
-  process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
   methods: 'GET, POST, PUT, DELETE',
   credentials: true,
 };

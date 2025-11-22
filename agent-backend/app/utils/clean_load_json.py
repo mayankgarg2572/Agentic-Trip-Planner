@@ -1,8 +1,7 @@
 import json
-from typing import Any, List
+from typing import Any
 
 _PARSE_FAILED = object()
-
 
 def remove_json_prefix_list(content: str) -> Any:
     if isinstance(content, str):
@@ -17,8 +16,6 @@ def remove_json_prefix_list(content: str) -> Any:
             decoded = json.loads(content)
             return decoded
         except Exception:
-            return _PARSE_FAILED
-    elif isinstance(content, list):
-        return content
+            return content
     else:
-        return _PARSE_FAILED
+        return content

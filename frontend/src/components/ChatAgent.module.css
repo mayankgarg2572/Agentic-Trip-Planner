@@ -116,9 +116,9 @@
     padding: 0.4rem;
   }
 
-  .chatHistoryScroll {
-    /* max-height: 30vh; */
-  }
+  /* .chatHistoryScroll {
+    /* max-height: 30vh; 
+  } */
 
   .chatForm textarea {
     font-size: 0.9rem;

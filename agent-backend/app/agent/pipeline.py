@@ -1,4 +1,5 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
+from langsmith import traceable
 
 from app.models.schemas import BaseLocInfo, BudgetItem, GeoAPILocInput, userSpecifiedLocation
 
@@ -19,7 +20,7 @@ from app.utils.clean_load_json import remove_json_prefix_list, _PARSE_FAILED
 from app.utils.helpers import correct_final_llm_response_format
 from app.utils.llm import MAIN_LLM
 
-
+@traceable
 def extract_locations(user_query: str) -> List[BaseLocInfo]:
     print("\n\nInside the extract_locations function")
     llm = MAIN_LLM  
@@ -31,21 +32,17 @@ def extract_locations(user_query: str) -> List[BaseLocInfo]:
         content = llm_with_web_search(prompt, llm)
         result = remove_json_prefix_list(content)
         locations = [] if (result is _PARSE_FAILED) else result
-        no_of_attempts = 0
-        while (len(locations) == 0) and no_of_attempts < 2:
-            content = correct_final_llm_response_format(prompt, llm, content)
-            result = remove_json_prefix_list(content)
-            locations = [] if (result is _PARSE_FAILED) else result
-            no_of_attempts += 1
         locations =  [BaseLocInfo(**loc) for loc in locations if isinstance(loc, dict) and "name" in loc and "type" in loc]
         return locations
     except Exception as e:
         print("Error occurred while extracting locations:", e)
         raise e
 
-
+@traceable
 def format_locations(user_query:str, locations: List[BaseLocInfo]) -> List[GeoAPILocInput]:
     print("\n\nInside the format_locations function")
+    if len(locations) == 0:
+        return []
     llm = MAIN_LLM  
     prompt = (
         GEOAPIFY_INPUT_PREP_PROMPT +
@@ -56,22 +53,24 @@ def format_locations(user_query:str, locations: List[BaseLocInfo]) -> List[GeoAP
         content = llm_with_web_search(prompt, llm)
         result = remove_json_prefix_list(content)
         new_locations = [] if (result is _PARSE_FAILED) else result
+        
         new_locations = [
-            GeoAPILocInput(**loc) for loc in new_locations
-            if isinstance(loc, dict) and
-                "name_canonical" in loc and loc["name_canonical"] and
-                "geocode_text" in loc and loc["geocode_text"] and
-                "name_original" in loc and loc["name_original"]
-        ]
+                GeoAPILocInput(**loc) for loc in new_locations
+                if isinstance(loc, dict) and
+                    "name_canonical" in loc and loc["name_canonical"] and
+                    "geocode_text" in loc and loc["geocode_text"] and
+                    "name_original" in loc and loc["name_original"]
+            ]
         return new_locations
     except Exception as e:
         print("Error occurred while formatting locations:", e)
         raise e
 
-
+@traceable
 def extract_suitable_time(user_query: str, locations: list[GeoAPILocInput]) -> str:
     print("\n\nInside the extract_suitable_time function")
-
+    if len(locations) == 0:
+        return ""
     llm = MAIN_LLM
     prompt = TIME_OPENING_FINDER + "\n\nUser query:" + f"{user_query}\n\nLocations: {locations}."
     
@@ -85,9 +84,11 @@ def extract_suitable_time(user_query: str, locations: list[GeoAPILocInput]) -> s
         timings = None
     return str(timings) if timings is not None else ""
 
-
+@traceable
 def order_locations(location_objs, routes, suitable_time_opening, user_query):
     print("\n\nInside the order_locations function call")
+    if len(location_objs) == 0:
+        return []
     llm = MAIN_LLM
     names = [loc.address for loc in location_objs]
     prompt = ROUTE_ORDER_PROMPT + f"\n\nUser query: {user_query}\n\nLocations: {names}\n\nRoutes General info between different Locations:{routes}\n\nSuitable opening times of tourists spots: {suitable_time_opening}"
@@ -102,9 +103,11 @@ def order_locations(location_objs, routes, suitable_time_opening, user_query):
         print("Error occurred while ordering locations:", e)
         raise e
 
-
-def estimate_budget(user_query, location_objs):
+@traceable
+def estimate_budget(user_query, location_objs) -> Tuple[List[BudgetItem], int] :
     print("\n\nInside estimate_budget function call")
+    if len(location_objs) == 0:
+        return [], -1
     llm = MAIN_LLM
     budget_items = []
     total_budget = 0
@@ -141,13 +144,13 @@ def node1_pipeline(user_query: str, user_provided_locations: Optional[List[userS
 
         # 1. Extract locations (LLM + web_search)
         locations_info = extract_locations(user_query)
-
+        print("Locations result1:", locations_info)
 
         final_locations_info = format_locations(user_query, locations_info)
-
+        print("Locations result2:", final_locations_info)
 
         suitable_time_opening = extract_suitable_time(user_query, final_locations_info)
-
+        
         # 2. Geocode locations
         location_objs = geocode_locations_service(final_locations_info)
   

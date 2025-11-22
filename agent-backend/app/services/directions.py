@@ -3,6 +3,8 @@ from typing import List
 from app.models.schemas import Location, RouteMetadata
 from app.core.config import GEOAPIFY_API_KEY
 from math import radians, sin, cos, asin, sqrt
+from langsmith import traceable
+
 
 def _valid_coord(lat, lng):
     return (lat is not None and lng is not None and
@@ -16,6 +18,7 @@ def _haversine_km(lat1, lon1, lat2, lon2) -> float:
     return 2 * R * asin(sqrt(a))
 
 
+@traceable
 def build_pairwise_air_distance(locations: list[Location]) -> list[RouteMetadata]:
     route_metadata = []
     if len(locations) < 2:
@@ -38,6 +41,7 @@ def build_pairwise_air_distance(locations: list[Location]) -> list[RouteMetadata
     return route_metadata
 
 
+@traceable
 def fetch_routes_metadata(locations: List[Location], adjacent_only: bool = False) -> List[RouteMetadata]:
     """
     Fetches the best routes between every two locations provided in the locations' array
@@ -85,6 +89,7 @@ def fetch_routes_metadata(locations: List[Location], adjacent_only: bool = False
     return route_metadata
 
 
+@traceable
 def fetch_complete_itinerary(locations: List[Location]) -> object:
     """
     Fetches the complete itineraries

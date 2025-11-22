@@ -1,64 +1,116 @@
 MAX_TIME_WEB_SEARCH = 2
 
 
+WEB_SEARCH_INSTRUCTIONS="""
+WEB_SEARCH_POLICY:v1
+Output mode — choose exactly one per turn:
+  • search: <single precise query>
+  • final_response: <schema-only JSON, no prose, no code fences>
+  • refine_request: {{"new_search_query_to_use":"...", "search_summary_current":["≤5 short factual bullets"]}}
+Hard limits:
+  • Total allowed searches this task: {max_search}. Merge sub-asks into one query.
+  • Evidence cap: ≤5 bullets TOTAL in context, ≤350 chars overall. Never paste raw web text.
+  • Final responses must be JSON only (no fences). 
+  • Do not output both search/refine/final in the same turn.
+Query hygiene:
+  • Make the query self-contained (city/state/country, spellings).
+  • Prefer operators: site:, intitle:, "quoted phrase".
+""".format(max_search=MAX_TIME_WEB_SEARCH)
+
+
 LOCATION_EXTRACTION_PROMPT = """
 Role: Expert Travel Assistant
 
-Task: Extract all relevant locations, tourist spots, and accommodations for  the user's trip planning query with availability of max {max_search} times search using the web-search tool.
+Task: Extract all relevant locations, tourist spots, and accommodations names for the user's trip planning query.
 
 Instructions:
 - Identify every place the user wants to visit, stay, or see.
 - For each, specify its type: "destination", "tourist_spot", or "accommodation".
 - Ignore irrelevant locations.
-- If you are not sure about the location, use the website search tool to get the information.
-- If you want to use the website search tool, output: search: <your_query_text>.
-- When you are ready to answer, output: final_response: <your answer in JSON>.
-- The final_response answer will be a JSON list of objects: [{{"name": "...", "type": "..."}}]
-- Output ONLY ONE of the following per response: either 'search: <query>' OR 'final_response: <JSON>'.
-- Never output both at the same time.
-- Just when you are outputting the final_response then only provide in json else in case of search just provide the searchable string for web search as in the above mentioned format.  
-- You can use web search at most {max_search} times so craft the query for web search carefully.
+- Use web search as much as possible but effectively to search the tourist spots or famous places of a city or location. Output exactly one mode per turn per policy.
+
+Final response Format:
+- The final_response answer will be in the following format(first the word 'final_response' then a JSON list of objects):
+final_response:[{{"name": "...", "type": "..."}}]
+
+
+Web Search Instructions:
+{web_search_instructions}
+
 
 Example:
-User query: "Plan a trip from Delhi to Srinagar, visiting Dal Lake and Mughal Gardens, and suggest a good hotel near Lal Chowk."
-Output(You can choose only one of the format provided below as per your requirement):
-search: "Complete address of Dal Lake in Srinagar"
-or
-search: "Complete address of Mughal Gardens, Srinagar"
-or
-search: "Complete address of Dal Lake in Srinagar and nearby hotels in Lal Chowk, Srinagar"
-or
-search: "Complete address of Hotel Gulab Bagh in Lal Chowk, Srinagar"
-or
-If want to give the final_response, then:
 
+input:
+User query: "Plan a trip from Delhi to Srinagar, visiting Dal Lake and Mughal Gardens, and suggest a good hotel near Lal Chowk."
+
+
+output:
+search: "Dal Lake Srinagar exact address and area; Mughal Gardens Srinagar (which gardens are meant: Shalimar Bagh, Nishat Bagh, Chashme Shahi) canonical names and addresses; "Hotel Gulab Bagh" address Lal Chowk Srinagar"
+
+
+input:Web search results for query: 'Dal Lake Srinagar exact address and area; Mughal Gardens Srinagar (which gardens are meant: Shalimar Bagh, Nishat Bagh, Chashme Shahi) canonical names and addresses; "Hotel Gulab Bagh" address Lal Chowk Srinagar':
+
+[
+“Mughal Gardens” in Srinagar commonly refers to Shalimar Bagh, Nishat Bagh, and Chashme Shahi.
+Dal Lake is the central waterbody; tourist access along Boulevard Road, Srinagar.
+Lal Chowk is a central commercial locality in Srinagar.
+“Hotel Gulab Bagh” listed near/at Lal Chowk; exact address needs confirmation.
+Garden addresses require canonical confirmation.
+]
+
+Now, based on this, continue.
+
+Output:
+refine_request: {{"new_search_query_to_use":"Confirm canonical postal/road addresses for Shalimar Bagh and Nishat Bagh, Srinagar; confirm exact address line for "Hotel Gulab Bagh" in Lal Chowk, Srinagar","search_summary_current":["Mughal Gardens is ambiguous—likely Shalimar + Nishat for mainstream itineraries.","Dal Lake already sufficiently identified for extraction output.","Hotel Gulab Bagh exists near Lal Chowk; needs precise address."]}}
+
+input:
+Web search results for query: 'Confirm canonical postal/road addresses for Shalimar Bagh and Nishat Bagh, Srinagar; confirm exact address line for "Hotel Gulab Bagh" in Lal Chowk, Srinagar':
+[
+  "Shalimar Bagh: on Harwan/Shalimar Road, Srinagar (canonical tourist listing).
+  Nishat Bagh: on Boulevard Road, Nishat area, Srinagar (canonical tourist listing).
+  Chashme Shahi often included under “Mughal Gardens” but not mandatory if user only said “Mughal Gardens.”
+  Hotel Gulab Bagh: address verified in Lal Chowk, Srinagar (exact line confirmed).
+  All entities are within Srinagar city limits.",
+  "...",
+  ...
+]
+Now, based on this, continue.
+
+
+output:
 final_response:
 [
   {{"name": "Delhi", "type": "destination"}},
   {{"name": "Srinagar", "type": "destination"}},
-  {{"name": "Dal Lake, Main Srinagar Market, Srinagar", "type": "tourist_spot"}},
-  {{"name": "Mughal Gardens, Srinagar", "type": "tourist_spot"}},
+  {{"name": "Dal Lake, Srinagar", "type": "tourist_spot"}},
+  {{"name": "Shalimar Bagh, Srinagar", "type": "tourist_spot"}},
+  {{"name": "Nishat Bagh, Srinagar", "type": "tourist_spot"}},
   {{"name": "Hotel Gulab Bagh, Lal Chowk, Srinagar", "type": "accommodation"}}
 ]
 
 Tips:
 - Be exhaustive but precise.
-- Limit your web search to max {max_search} times. Combine more than one question or asks in single query to reduce number of web search call. This is a must condition.
+- Must return the result in one of the specified formats only.
 - Use full names and context from the query.
-- Just provide a list of locations, no descriptions or explanations. Return the result in the specified format only. Either in json for final_response or string for web_search.
-""".format(max_search=MAX_TIME_WEB_SEARCH)
-
+- Just provide a list of locations names, no descriptions or explanations.
+- Limit your web search to max {max_search} times.
+""".format(max_search=MAX_TIME_WEB_SEARCH, web_search_instructions=WEB_SEARCH_INSTRUCTIONS)
 
 GEOAPIFY_INPUT_PREP_PROMPT = """
-Role: You convert a list of location names from a user query into clean, disambiguated, admin-rich records for Geoapify geocoding.
+Role: Convert user locations into clean, disambiguated, admin-rich records for Geoapify.
 
-Important points to follow (STRICT)
-- Output contract
-  - If you need the web to resolve ambiguity, output ONLY:  search: <your_query_text>
-  - When you are ready to answer, output ONLY:  final_response: <your JSON array>
-  - Never output both in the same response. No extra commentary. No code fences.
-  - You may use the web-search tool at most {max_search} time(s). Prefer one precise, combined query.
-- Output schema (repeat per input location)
+Domain rules (strict, compressed)
+- Data discipline: no fabricated lat/lng or postcodes; include a postcode only if verified; prefer official/tourism/Wikipedia infoboxes; put any URLs in "sources".
+- Disambiguation: if names are ambiguous, use ≤{max_search} total searches with one combined, well-formed query.
+- Types: "city" (cities/towns); "amenity" (POIs—temple/museum/fort/hotel); "locality" (neighborhood/area); "street" (street names).
+- geocode_text (order): place, locality, near <landmark_if_any>, city, state, country. Omit missing pieces; avoid duplicates.
+
+Web Search Instructions:
+{web_search_instructions}
+
+Final Response schema
+- The final_response answer will be in the following format(must have first the word 'final_response' then a JSON list of objects):
+final_response:
   [
     {{
       "name_original": "<as received>",
@@ -75,96 +127,82 @@ Important points to follow (STRICT)
       "sources": []
     }}
   ]
-- Schema compliance
-  - "geocode_type" MUST be EXACTLY one of: "city", "amenity", "locality", "street", "unknown".
-  - Never use "state", "province", or "region" as geocode_type. Those belong ONLY in the "state" field. If unsure → "unknown".
-  - Return a single JSON array. No markdown, no backticks, no trailing commas, no comments, no extra keys.
-  - Use null for any unknown field. Keep keys exactly as shown.
-- Data discipline
-  - Do NOT fabricate latitude/longitude or postcodes. Include a postcode only if explicitly present in reliable sources.
-  - Prefer authoritative sources (official sites, tourism boards, Wikipedia infoboxes). Put URLs (if used) into "sources".
-- Disambiguation
-  - If a name is ambiguous, perform at most {max_search} web search(es) with one well-formed combined query that covers all ambiguous items.
-  - After results are provided, respond with final_response only.
-- Geocode typing guidelines
-  - "city": cities/towns.  "amenity": POIs (temple, museum, fort, hotel).  "locality": neighborhoods/areas.  "street": street names.
-- geocode_text construction (exact order)
-  - place, locality, near <landmark_if_any>, city, state, country
-  - Omit missing parts without extra commas/spaces and avoid duplicates.
 
-Tips
-- Map input types: tourist_spot → amenity; destination → city (if it’s a known city/town); accommodation → amenity.
-- Use "inside_of" for POIs located within a larger complex/campus (e.g., a gate inside a fort).
-- If the city name appears in the POI itself, avoid repeating it in geocode_text.
-- If uncertainty persists, prefer "unknown" for geocode_type rather than guessing.
+Schema compliance: "geocode_type" ∈ {{"city","amenity","locality","street","unknown"}}; single JSON array; no extra keys/comments/fences; null for unknowns.
+
 
 Good example (ideal format)
+input:
 user_query: "Plan for Jaipur: Hawa Mahal and Jal Mahal."
-locations: [
-  {{"name":"Hawa Mahal","type":"tourist_spot"}},
-  {{"name":"Jal Mahal","type":"tourist_spot"}}
-]
-final_response:
-[
-  {{
-    "name_original": "Hawa Mahal",
-    "name_canonical": "Hawa Mahal",
-    "geocode_type": "amenity",
-    "country": "India",
-    "state": "Rajasthan",
-    "city": "Jaipur",
-    "postcode": null,
-    "locality": "Badi Choupad",
-    "inside_of": null,
-    "nearby": null,
-    "geocode_text": "Hawa Mahal, Badi Choupad, Jaipur, Rajasthan, India",
-    "sources": []
-  }},
-  {{
-    "name_original": "Jal Mahal",
-    "name_canonical": "Jal Mahal",
-    "geocode_type": "amenity",
-    "country": "India",
-    "state": "Rajasthan",
-    "city": "Jaipur",
-    "postcode": null,
-    "locality": "Amer Road",
-    "inside_of": null,
-    "nearby": "Man Sagar Lake",
-    "geocode_text": "Jal Mahal, Amer Road, near Man Sagar Lake, Jaipur, Rajasthan, India",
-    "sources": []
-  }}
-]
+locations: [ {{"name":"Hawa Mahal","type":"tourist_spot"}}, {{"name":"Jal Mahal","type":"tourist_spot"}} ]
 
-Bad example (intentionally contains many violations)
+output:
+search: ""Hawa Mahal" Jaipur canonical locality and admin fields; "Jal Mahal" Amer Road near "Man Sagar Lake" Jaipur canonical locality/admin; confirm state and avoid postcode fabrication site:wikipedia.org OR site:rajasthantourism.rajasthan.gov.in"
+
+input:
+web search results for: '"Hawa Mahal" Jaipur canonical locality and admin fields; "Jal Mahal" Amer Road near "Man Sagar Lake" Jaipur canonical locality/admin; confirm state and avoid postcode fabrication site:wikipedia.org OR site:rajasthantourism.rajasthan.gov.in':
+
+[
+Hawa Mahal is in the Pink City area; commonly associated with Badi Choupad.
+Jal Mahal sits on Amer Road along Man Sagar Lake, Jaipur.
+Both are in Jaipur, Rajasthan, India.
+No authoritative postcode shown in infoboxes.
+Names already canonical; only locality text needs confirmation.
+]
+Now, based on this, continue.
+
+output:
+refine_request: {{"new_search_query_to_use":"Confirm exact locality strings used by official/authoritative sources: 'Badi Choupad' for Hawa Mahal; 'Amer Road' and 'near Man Sagar Lake' for Jal Mahal, Jaipur, Rajasthan, India","search_summary_current":["Both POIs are Jaipur, Rajasthan, India.","Hawa Mahal locality appears as Badi Choupad.","Jal Mahal is on Amer Road by Man Sagar Lake.","No verified postcodes in reliable sources.","Canonical names already correct."]}}
+
+input:
+Web search results for: 'Confirm exact locality strings used by official/authoritative sources: "Badi Choupad" for Hawa Mahal; "Amer Road" and "near Man Sagar Lake" for Jal Mahal, Jaipur, Rajasthan, India':
+
+[
+Hawa Mahal locality listed as Badi Choupad in multiple tourism listings.
+Jal Mahal commonly given on Amer Road; lake reference is Man Sagar Lake.
+City/state: Jaipur, Rajasthan, India.
+Postcodes not consistently provided by authoritative sources.
+All data consistent with prior summary.
+]
+Now, based on this, continue.
+
+output:
+final_response:
+[{{"name_original":"Hawa Mahal","name_canonical":"Hawa Mahal","geocode_type":"amenity","country":"India","state":"Rajasthan","city":"Jaipur","postcode":null,"locality":"Badi Choupad","inside_of":null,"nearby":null,"geocode_text":"Hawa Mahal, Badi Choupad, Jaipur, Rajasthan, India","sources":[]}}, {{"name_original":"Jal Mahal","name_canonical":"Jal Mahal","geocode_type":"amenity","country":"India","state":"Rajasthan","city":"Jaipur","postcode":null,"locality":"Amer Road","inside_of":null,"nearby":"Man Sagar Lake","geocode_text":"Jal Mahal, Amer Road, near Man Sagar Lake, Jaipur, Rajasthan, India","sources":[]}}]
+
+Bad flow (intentionally wrong)
+input:
 user_query: "Kolkata day: Victoria Memorial, Eden Gardens."
-locations: [
+locations:
+[
   {{"name":"Victoria Memorial","type":"tourist_spot"}},
   {{"name":"Eden Gardens","type":"tourist_spot"}}
 ]
-search: "Victoria Memorial Eden Gardens details"                     // ❌ includes search:
-final_response:
+
+output:
+```tool_code
+search: "Victoria Memorial Eden Gardens details"
 [
   {{
     "name_original": "Victoria Memorial",
-    "name_canonical": "Victoria Memorial, Kolkata, Kolkata",        // ❌ duplicate city in canonical
-    "geocode_type": "state",                                        // ❌ invalid enum
+    "name_canonical": "Victoria Memorial, Kolkata, Kolkata",
+    "geocode_type": "state",
     "country": "India",
     "state": "West Bengal",
     "city": "Kolkata",
-    "postcode": "700000",                                           // ❌ fabricated postcode
+    "postcode": "700000",
     "locality": "Maidan",
-    "inside_of": "Kolkata",                                         // ❌ nonsense inside_of
+    "inside_of": "Kolkata",
     "nearby": null,
-    "lat": 22.54, "lng": 88.34,                                     // ❌ forbidden fields
-    "geocode_text": "India, West Bengal, Kolkata, Victoria Memorial", // ❌ wrong order
+    "lat": 22.54, "lng": 88.34,
+    "geocode_text": "India, West Bengal, Kolkata, Victoria Memorial",
     "sources": ["someblog.example.com"],
-    "extra": "commentary"                                           // ❌ extra key
+    "extra": "commentary"
   }},
   {{
     "name_original": "Eden Gardens",
     "name_canonical": "Eden Gardens",
-    "geocode_type": "poi",                                          // ❌ invalid enum
+    "geocode_type": "poi",
     "country": "India",
     "state": "West Bengal",
     "city": "Kolkata",
@@ -172,60 +210,84 @@ final_response:
     "locality": "B.B.D. Bagh",
     "inside_of": null,
     "nearby": "Howrah Bridge",
-    "geocode_text": "Eden Gardens, Kolkata, Kolkata, West Bengal, India, India", // ❌ duplicates
+    "geocode_text": "Eden Gardens, Kolkata, Kolkata, West Bengal, India, India",
     "sources": []
   }}
 ]
-``` // ❌ both search & final_response; comments present; code fences; invalid JSON
+```
+(Why wrong: outputs both search: and final_response:, uses invalid geocode_type, fabricates postcode/lat/lng, wrong geocode_text order, duplicates city, extra keys, and unnecessaey fences and language denotion and printing JSON list without guiding text `final_response:`)
 
-
-Final reminders (repeat)
-- STRICT SCHEMA: Only keys shown; "geocode_type" ∈ {{"city","amenity","locality","street","unknown"}}; null for unknowns; no extra keys, no comments, no code fences.
-- WEB_SEARCH RULE: If ambiguous, output ONLY one search: ... (≤ {max_search}). After results, output ONLY final_response.
-- NO FABRICATION: Never invent lat/lng or postcodes; prefer authoritative sources; if unsure use "unknown".
-""".format(max_search=MAX_TIME_WEB_SEARCH)
-
+Common errors to avoid
+- Outputting both a search/refine and final_response in one turn.
+- Invalid format of the result(not printing guiding text(like `final_response` or `search` `refine_request`) in the response, and directly printing a JSON list or search text /refine_request object)
+- Invalid geocode_type (e.g., "state") or extra keys (lat/lng).
+- Fabricated postcodes; wrong geocode_text order; duplicate city names.
+""".format(max_search=MAX_TIME_WEB_SEARCH, web_search_instructions=WEB_SEARCH_INSTRUCTIONS)
 
 
 TIME_OPENING_FINDER = """
 Role: Expert Travel Time Advisor
 
-Task: Extract suitable travel times for tourist spots as asked in the user query and from the provided locations.
+Task: Extract suitable visiting/opening times for tourist spots from the user query and provided locations. Follow WEB_SEARCH_POLICY:v1.
 
 Instructions:
 - You will be provided with a list of locations and a user query.
 - Identify which locations are tourist spots or places the user wants to visit.
 - For each relevant location, find the best or most suitable opening/visiting times.
-- If you are not sure about the timings, use the website search tool to get the information.
-- If you want to use the website search tool, output: search: <your_query_text>.
-- When you are ready to answer, output: final_response: <your answer in JSON>.
-- The final_response answer must be a JSON list of objects: [{{"location_name": "...", "suitable_time": "..."}}]
-- Output ONLY ONE of the following per response: either 'search: <query>' OR 'final_response: <JSON>'.
-- Never output both at the same time.
-- When outputting final_response, provide only the JSON list as specified. For search, provide only the search string.
+- If you are not sure about the timings, use the web search tool to get the information.
+- Use web search only if needed; combine multiple places into ≤{max_search} total queries.
+
+- Output mode — choose exactly one per turn (policy):
+  • search: <single precise query>
+  • refine_request: {{"new_search_query_to_use":"...", "search_summary_current":["≤5 short factual bullets"]}}
+  • final_response: <JSON list only>
+
+- Final response's JSON list schema:
+[{{"location_name": "...", "suitable_time": "..."}}]
 
 Example:
+input:
 User query: "What are the best times to visit Dal Lake and Mughal Gardens during my trip?"
 Locations: ["Dal Lake", "Mughal Gardens", "Hotel Gulab Bagh"]
 
-Output (choose only one format as per requirement):
-search: "Opening hours and best visiting times for Dal Lake, Srinagar"
-or
-search: "Best time to visit Mughal Gardens, Srinagar"
-or
+output:
+search: "Opening hours + best visiting windows for Dal Lake and Mughal Gardens, Srinagar (combine), prefer official tourism/wikipedia summaries"
+
+input:
+Web search results for query: 'Opening hours + best visiting windows for Dal Lake and Mughal Gardens, Srinagar (combine), ...':
+[
+Dal Lake: popular at sunrise/sunset; boating schedules vary by season.
+Mughal Gardens: typical garden hours day-time; specific gates vary; peak season crowding.
+Key gardens often mean Shalimar/Nishat in Srinagar.
+]
+Now, based on this, continue.
+
+output:
+refine_request: {{"new_search_query_to_use":"Confirm current seasonal timings for Shalimar Bagh and Nishat Bagh; note any closed weekdays; typical boating time bands at Dal Lake","search_summary_current":["Dal Lake best at sunrise/sunset; boating seasonal.","Mughal Gardens are daytime; specifics per garden.","User asked for visiting windows, not ticket prices."]}}
+
+input:
+Web search results for query: 'Confirm current seasonal timings for Shalimar Bagh and Nishat Bagh; ...':
+[
+Shalimar Bagh: ~9:00–18:00 (seasonal daylight variation).
+Nishat Bagh: ~9:00–18:00 (seasonal daylight variation).
+Dal Lake boating popular early morning and late afternoon golden hour.
+]
+Now, based on this, continue.
+
+output:
 final_response:
 [
-  {{"location_name": "Dal Lake", "suitable_time": "10:00AM - 12:30PM, 3:30PM - 5:30PM"}},
-  {{"location_name": "Mughal Gardens", "suitable_time": "9:00AM - 6:00PM"}}
+  {{"location_name": "Dal Lake", "suitable_time": "Sunrise–09:00 and 16:00–Sunset (avoid mid-day glare)"}},
+  {{"location_name": "Mughal Gardens (Shalimar/Nishat)", "suitable_time": "09:00–18:00 (season/ daylight dependent)"}}
 ]
 
 Tips:
 - Be exhaustive but precise.
-- Limit to your web search to max {max_search} times. Combine more than one question or asks in single query to reduce number of web search call. This is a must condition.
-- Use full names and context from the query and location list.
-- Only provide suitable times for locations relevant to the user's trip.
-- Return the result in the specified format only: either JSON for final_response or string for web_search.
-""".format(max_search=MAX_TIME_WEB_SEARCH)
+- Combine locations into one query where possible (≤{max_search} total).
+- Use full names/context from the query & locations list.
+- Must return the result in one of the specified formats only(do not make any mistakes as not printing guiding text(like `final_response` or `search` `refine_request`) in the response, and directly printing a JSON list or search text or refine_request object)
+- Only include spots relevant to visiting times.
+""".format(max_search=MAX_TIME_WEB_SEARCH, web_search_instructions=WEB_SEARCH_INSTRUCTIONS)
 
 
 ROUTE_ORDER_PROMPT = """
@@ -237,7 +299,7 @@ Instructions:
 - Consider user intent, travel time, and logical sequence.
 - If the user specifies a start/end, respect it.
 - If you are not sure about the best order, use the web_search tool to get the information.
-- If you want to use the website search tool, output: search: <your_query_text>.
+- If you want to use the web search tool, output: search: <your_query_text>.
 - When you are ready to answer, output: final_response: <your answer in JSON>.
 - The final_response answer must be a JSON array of location names in order.
 - Output ONLY ONE of the following per response: either 'search: <query>' OR 'final_response: <JSON>'.
@@ -260,8 +322,10 @@ Tips:
 - Limit to your web search to max {max_search} times. Combine more than one question or asks in single query to reduce number of web search call. This is a must condition.
 - Use full names and context from the query and location list.
 - Return the result in the specified format only: either JSON for final_response or string for web_search.
-- Results from your earlier searches will be added to this current prompt only so use them wisely and hence can limit the no. of web search tool as well. 
-""".format(max_search=MAX_TIME_WEB_SEARCH)
+- Results from your earlier searches will be added to this current prompt only so use them wisely and hence can limit the no. of web search tool as well.
+- Must return the result in one of the specified formats only(do not make any mistakes as not printing guiding text(like `final_response` or `search` `refine_request`) in the response, and directly printing a JSON list or search text or refine_request object)
+""".format(max_search=MAX_TIME_WEB_SEARCH, web_search_instructions=WEB_SEARCH_INSTRUCTIONS)
+
 
 BUDGET_ESTIMATION_PROMPT = """
 Role: Travel Budget Expert
@@ -271,7 +335,7 @@ Task: For each location, estimate costs for accommodation, food, transport, and 
 Instructions:
 - Use realistic, region-specific prices.
 - If you are not sure about the costs, use the web_search tool to get the information.
-- If you want to use the website search tool, output: search: <your_query_text>.
+- If you want to use the web search tool, output: search: <your_query_text>.
 - When you are ready to answer, output: final_response: <your answer in JSON>.
 - The final_response answer must be a JSON list: [{{"item": "...", "cost": ...}}]
 - Output ONLY ONE of the following per response: either 'search: <query>' OR 'final_response: <JSON>'.
@@ -297,8 +361,9 @@ Tips:
 - Use web search for up-to-date prices if possible.
 - Limit your web search to max {max_search} times. Combine more than one question or asks in single query to reduce number of web search call, it is a must condition.
 - Be exhaustive but precise.
-- Return the result in the specified format only: either JSON for final_response or string for web-based search.
-""".format(max_search=MAX_TIME_WEB_SEARCH)
+- Return the result in one of the specified format only: either JSON for final_response or string for web-based search.
+- Must return the result in one of the specified formats only(do not make any mistakes as not printing guiding text(like `final_response` or `search` `refine_request`) in the response, and directly printing a JSON list or search text or refine_request object)
+""".format(max_search=MAX_TIME_WEB_SEARCH, web_search_instructions=WEB_SEARCH_INSTRUCTIONS)
 
 
 ROUTE_RECOMMENDATION_PROMPT = f"""

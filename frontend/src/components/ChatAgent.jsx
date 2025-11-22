@@ -1,17 +1,15 @@
-// src/components/ChatAgent.jsx
 import React, { useState, useContext } from "react";
 import { MapContext } from "../context/MapContext";
 import api from "../api/api";
 import classes from "./ChatAgent.module.css";
+import ChatHistory from "./ChatHistory"
 
 const ChatAgent = () => {
   const [prompt, setPrompt] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [selectedChatIndex, setSelectedChatIndex] = useState(null);
   const [loading, setLoading] = useState(false);
-  // const [table, setTable] = useState({});
-  // const {  } = useContext(MapContext);
-  const { setSearchResults, selectedLocations, setItinerary, agentMapResults, setAgentMapResults } =
+  const { selectedLocations, setItinerary, setAgentMapResults } =
     useContext(MapContext);
 
   const handleSend = async () => {
@@ -67,53 +65,53 @@ const ChatAgent = () => {
   };
 
   // New ChatHistory component for better interaction
-  const ChatHistory = ({
-    chatHistory,
-    selectedChatIndex,
-    setSelectedChatIndex,
-    classes,
-  }) => (
-    <div className={classes.chatHistoryScroll}>
-      <ul className={classes.chatList}>
-        {chatHistory.map((chat, idx) => (
-          <li
-            key={idx}
-            className={selectedChatIndex === idx ? classes.selected : ""}
-            onClick={() => setSelectedChatIndex(idx)}
-            style={{ cursor: "pointer" }}
-          >
-            <div style={{ marginTop: "10px", whiteSpace: "pre-wrap" }}>
-              <b>You:</b> {chat.user.slice(0, 60)}
-              {chat.user.length > 60 ? "..." : ""}
-              <br />
-              <b>Agent:</b> {chat.agent.slice(0, 60)}
-              {chat.agent.length > 60 ? "..." : ""}
-            </div>
-          </li>
-        ))}
-      </ul>
-      {selectedChatIndex !== null && (
-        <div
-          className={classes.selectedChatDetail}
-          style={{
-            maxHeight: "38vh",
-            overflowY: "auto",
-            marginTop: "10px",
-            border: "1px solid #ddd",
-            borderRadius: "6px",
-            padding: "10px",
-            background: "#fafafa",
-          }}
-        >
-          <div style={{ whiteSpace: "pre-wrap" }}>
-            <b>You:</b> {chatHistory[selectedChatIndex].user}
-            <br />
-            <b>Agent:</b> {chatHistory[selectedChatIndex].agent}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  // const ChatHistory = ({
+  //   chatHistory,
+  //   selectedChatIndex,
+  //   setSelectedChatIndex,
+  //   classes,
+  // }) => (
+  //   <div className={classes.chatHistoryScroll}>
+  //     <ul className={classes.chatList}>
+  //       {chatHistory.map((chat, idx) => (
+  //         <li
+  //           key={idx}
+  //           className={selectedChatIndex === idx ? classes.selected : ""}
+  //           onClick={() => setSelectedChatIndex(idx)}
+  //           style={{ cursor: "pointer" }}
+  //         >
+  //           <div style={{ marginTop: "10px", whiteSpace: "pre-wrap" }}>
+  //             <b>You:</b> {chat.user.slice(0, 60)}
+  //             {chat.user.length > 60 ? "..." : ""}
+  //             <br />
+  //             <b>Agent:</b> {chat.agent.slice(0, 60)}
+  //             {chat.agent.length > 60 ? "..." : ""}
+  //           </div>
+  //         </li>
+  //       ))}
+  //     </ul>
+  //     {selectedChatIndex !== null && (
+  //       <div
+  //         className={classes.selectedChatDetail}
+  //         style={{
+  //           maxHeight: "38vh",
+  //           overflowY: "auto",
+  //           marginTop: "10px",
+  //           border: "1px solid #ddd",
+  //           borderRadius: "6px",
+  //           padding: "10px",
+  //           background: "#fafafa",
+  //         }}
+  //       >
+  //         <div style={{ whiteSpace: "pre-wrap" }}>
+  //           <b>You:</b> {chatHistory[selectedChatIndex].user}
+  //           <br />
+  //           <b>Agent:</b> {chatHistory[selectedChatIndex].agent}
+  //         </div>
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 
   return (
     <div className={classes.chatAgentContainer}>
@@ -122,7 +120,6 @@ const ChatAgent = () => {
         chatHistory={chatHistory}
         selectedChatIndex={selectedChatIndex}
         setSelectedChatIndex={setSelectedChatIndex}
-        classes={classes}
       />
       <div className={classes.chatForm}>
         <textarea

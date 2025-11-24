@@ -13,13 +13,13 @@ app.use(express.json());
 
 
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  origin: process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || ['http://localhost:3000'],
   methods: 'GET, POST, PUT, DELETE',
   credentials: true,
 };
 
 app.use(cors(corsOptions));
-
+app.options('*', cors(corsOptions));
 
 // Routes
 app.use('/api', locationRoutes);

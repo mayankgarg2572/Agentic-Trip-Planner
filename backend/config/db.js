@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
-
+const {requireEnv} =  require("./env")
 const connectDB = async () => {
+  const connURL = "mongodb+srv://"+requireEnv("MONGODB_USERNAME")+":"+requireEnv("MONGODB_USER_PASSWORD")+"@"+requireEnv("MONGODBCLUSTER")+".mongodb.net/?retryWrites=true&w=majority&appName="+requireEnv("MONGODB_APPNAME")
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
+    await mongoose.connect(connURL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });

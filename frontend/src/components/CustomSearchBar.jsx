@@ -62,7 +62,7 @@ const CustomSearchBar = () => {
     try {
       // Fetch results from Geoapify API
       const geoapifyResponse = await api.searchLocationMultiple(query);
-      geoapifyResults = (geoapifyResponse?.data?.results ?? []).map((r) => ({
+      geoapifyResults = (geoapifyResponse?.results ?? []).map((r) => ({
         ...r,
         source: "Geoapify",
       }));

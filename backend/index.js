@@ -4,9 +4,9 @@ const cors = require('cors');
 const path = require('path'); // Import path module
 const connectDB = require('./config/db');
 const locationRoutes = require('./routes/locationRoutes');
+const {port, allowedOrigins} =  require("./config/env")
 
-
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+// dotenv.config({ path: path.resolve(__dirname, '.env') });
 const app = express();
 
 app.use(express.json());
@@ -14,7 +14,7 @@ app.use(express.json());
 
 const corsOptions = {
   // origin: process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || ['http://localhost:3000'],
-  origin: process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()) || ['http://localhost:3000'],
+  origin: allowedOrigins,
   methods: 'GET, POST, PUT, DELETE',
   credentials: true,
 };
@@ -31,7 +31,7 @@ app.get('/state',(req, res)=>{
 } )
 
 // Connect to Database and Start Server
-const PORT = process.env.PORT || 5000;
+const PORT = port;
 
 connectDB().then(() => {
   console.log("db for search backend is enabled")

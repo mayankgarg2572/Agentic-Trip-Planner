@@ -14,8 +14,6 @@ function requireEnv(name) {
 
 module.exports = {
   port: process.env.PORT || 5000,
-  mongoUri: requireEnv('MONGO_URI'),
-  allowedOrigins:
-    process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()),
-    requireEnv
+  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()),
+  requireEnv
 };

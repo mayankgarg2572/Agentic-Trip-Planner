@@ -9,5 +9,7 @@ agent-backend/agentenv
 *__pycache__*
 
 
-
+*design*.txt
 NextTarget.txt
+
+.agent

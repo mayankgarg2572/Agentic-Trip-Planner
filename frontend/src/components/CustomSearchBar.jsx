@@ -1,5 +1,6 @@
 import React, { useState, useContext } from "react";
 import { MapContext } from "../context/MapContext";
+import { AppContext } from "../context/AppContext";
 import api from "../api/api";
 
 import "leaflet/dist/leaflet.css";
@@ -10,7 +11,8 @@ import classes from "./CustomSearchBar.module.css";
 const CustomSearchBar = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const { setSearchResults } = useContext(MapContext);
+  const { applySearchResultsToMap } = useContext(MapContext);
+  const { setSearchResults } = useContext(AppContext);
 
   const fetchNominationResults = async (query) => {
     const endpoint = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
@@ -47,7 +49,7 @@ const CustomSearchBar = () => {
   };
   const handleSearch = async () => {
     if (!query.trim()) return;
-    
+
     setLoading(true);
     let nominatimResults = [];
     let geoapifyResults = [];
@@ -71,7 +73,9 @@ const CustomSearchBar = () => {
     }
 
     // Combine results and update the state
-    setSearchResults([...nominatimResults, ...geoapifyResults]);
+    const finalResults = [...nominatimResults, ...geoapifyResults];
+    setSearchResults(finalResults);
+    applySearchResultsToMap(finalResults);
     setLoading(false);
   };
   return (

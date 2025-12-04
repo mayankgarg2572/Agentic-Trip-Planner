@@ -43,5 +43,6 @@ connectDB().then(() => {
 ;
 
 app.listen(PORT, () => {
+    //  console.log("Allowed origins:", allowedOrigins)
     console.log(`Search Backend Server is running on port ${PORT}`);
   });

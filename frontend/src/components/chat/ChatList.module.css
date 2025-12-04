@@ -1,0 +1,37 @@
+.listContainer {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.chatItem {
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chatItem:hover {
+    background-color: #f9f9f9;
+}
+
+.promptPreview {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.responsePreview {
+    font-size: 13px;
+    color: #666;
+}
+
+.emptyState {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #888;
+    padding: 20px;
+    text-align: center;
+}

@@ -13,7 +13,7 @@ function requireEnv(name) {
 }
 
 module.exports = {
-  port: process.env.PORT || 5000,
+  port: process.env.PORT,
   allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()),
   requireEnv
 };

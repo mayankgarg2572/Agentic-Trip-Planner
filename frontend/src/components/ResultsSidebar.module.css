@@ -9,21 +9,27 @@
   max-width: 100%;
   background: #ffffff;
   overflow-y: auto;
-  z-index: 999;
   box-shadow: 0.2rem 0 0.5rem rgba(0, 0, 0, 0.1);
   border-right: 0.1rem solid #ddd;
   padding: 1rem;
 }
 
-.resultSideBar p {
+.resultBarHeader {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.resultBarHeader p {
   font-size: 1.2rem;
   font-weight: bold;
   margin: 0;
   display: inline-block;
 }
 
-.resultSideBar button {
-  float: right;
+.resultBarHeader button {
+  /* float: right; */
   background: none;
   border: none;
   font-size: 1.2rem;
@@ -32,27 +38,7 @@
   transition: color 0.3s ease;
 }
 
-/*
-  How should I provide CSS to the div element:
-  <div className={styles.resultType}>
-        <label>
-          <input
-            type="radio"
-            checked={resultType === "search"}
-            onChange={() => setResultType("search")}
-          />
-          Search Results
-        </label>
-        <label>
-          <input
-            type="radio"
-            checked={resultType === "agent"}
-            onChange={() => setResultType("agent")}
-          />
-          Agent Results
-        </label>
-      </div>
-  */
+
 
 .resultType {
   display: flex;
@@ -128,13 +114,14 @@
 @media (max-width: 768px) {
   .resultSideBar {
     width: 100%;
-    height: 50vh;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    z-index: 1000;
+    /* height: 50vh; */
+    position: unset;
+    box-shadow: none;
+    /* top: auto; */
+    /* left: auto; */
+    /* z-index: 1000; */
     border-right: none;
-    border-top: 0.1rem solid #ddd;
+    /* border-top: 0.1rem solid #ddd; */
   }
 
   .resultSideBar p {
@@ -160,11 +147,13 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
   .resultType label {
     margin-bottom: 0.5rem;
   }
+
   .resultType input[type="radio"] {
     margin-right: 0.3rem;
   }
-  
+
 }

@@ -1,6 +1,28 @@
 Plan a trip from Jaipur to Srinagar, visiting Dal Lake and Mughal Gardens, and suggest a good hotel near Lal Chowk. Prefer for Trains for communating as I like to enjoy journey also, prefer seats in reserved 3rd AC class.
 
+Can you generate a 3 days trip plan from jaipur to Goa for visiting famous tourist spots in Goa? Prefer flight mode of transportation.
 
 Please plan a trip from Jaipur to Jodhpur for visiting Mehrangarh Fort, Jaswant Thadha and Kaylana Lake, consider their opening and closing time with the best time to visit them. Also suggest a good hotel near Jodhpur Airport.
 
 Plan a trip from Jaipur to three places, as Nathdwara ji Temple, Sawariya Seth temple(at Chittorgarh), and Ekling Ji Temple. I believe all three (Nathdwara ji Temple, Sawariya Seth temple and Ekling Ji Temple) are not more than 100 km from Each other. We will leave by coming Saturday evening with stay at Saturday Night or Sunday early morning like 5:00 am which you think suitable best. We want to come back to Jaipur by the same Sunday night any how in both cases. Consider opening and closing time of these temples as well. Generate a budget table considering food, accomodation as applicable.
+
+
+Sample output:
+```
+{
+    api_result_itineraries: {
+        features: Array(1), 
+        properties: {…}, 
+        type: 'FeatureCollection'
+    },
+    itinerary: {
+        budget_table: {total_budget: 84000, budget_breakdown: Array(10293)},
+        
+        final_text: "Okay, here is a 3-day trip plan from Jaipur to Goa, focusing on famous tourist spots and using flights for transportation.\n\n**Day 1: Arrival in Goa & Old Goa Exploration**\n\n*   Fly from Jaipur to Goa.\n*   Check into your accommodation near Baga Beach.\n*   Afternoon: Visit the Basilica of Bom Jesus in Old Goa. This is a UNESCO World Heritage Site and one of the most important churches in Goa. Visiting in the afternoon will allow you to avoid the midday heat.\n\n**Day 2: Fort Aguada & Baga Beach**\n\n*   Morning: Explore Fort Aguada. It offers panoramic views of the Arabian Sea and is a great place to learn about Goa's history.\n*   Afternoon: Relax and enjoy Baga Beach. You can try water sports or simply relax by the sea.\n\n**Day 3: Leisure and Departure**\n\n*   Morning: You can explore nearby beaches like Calangute or Anjuna.\n*   Afternoon: Do some souvenir shopping or enjoy a final Goan meal.\n*   Evening: Depart from Goa.\n\nI hope you have a fantastic trip to Goa!",
+
+        locations: [{…}, {…}, {…}, {…}, {…}]
+        [[Prototype]]: Object
+    },
+    status: "success"
+}
+```

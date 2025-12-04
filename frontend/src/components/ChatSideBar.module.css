@@ -1,0 +1,27 @@
+.chatSidebar {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
+  height: 100%;
+  /* z-index: 3; */
+  position: 'relative';
+  border-left: '1px solid #e0e0e0';
+  background-color: 'white'
+}
+
+.resizer {
+  cursor: col-resize;
+  width: 0.25rem;
+  position: absolute;
+  /* left: 0; */
+  /* right: 0; */
+  top: 0;
+  height: 100%;
+  background-color: #92a9c1;
+  /* z-index: 100; */
+  /* left: 0; */
+  bottom: 0;
+  /* zIndex: 10, */
+  background-color: 'transparent'
+}

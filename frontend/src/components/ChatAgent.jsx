@@ -2,15 +2,16 @@ import React, { useState, useContext } from "react";
 import { MapContext } from "../context/MapContext";
 import api from "../api/api";
 import classes from "./ChatAgent.module.css";
-import ChatHistory from "./ChatHistory"
+import ChatHistory from "./ChatHistory";
+import { AppContext } from "../context/AppContext";
 
 const ChatAgent = () => {
   const [prompt, setPrompt] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [selectedChatIndex, setSelectedChatIndex] = useState(null);
   const [loading, setLoading] = useState(false);
-  const { selectedLocations, setItinerary, setAgentMapResults } =
-    useContext(MapContext);
+  const { setItinerary, setAgentMapResults } = useContext(MapContext);
+  const { userMarkedLocations } = useContext(AppContext);
 
   const handleSend = async () => {
     if (!prompt.trim()) return;
@@ -18,7 +19,7 @@ const ChatAgent = () => {
     try {
       let reqObj = {
         prompt: prompt,
-        locations_Selected: selectedLocations.map((loc) => ({
+        locations_Selected: userMarkedLocations.map((loc) => ({
           title: loc.title,
           lat: loc.lat,
           lng: loc.lng,
@@ -133,8 +134,8 @@ const ChatAgent = () => {
         />
         <div className={classes.selectedLocations}>
           <b>Selected Locations:</b>{" "}
-          {selectedLocations && selectedLocations.length > 0
-            ? selectedLocations.map((obj) => obj.title).join(", ")
+          {userMarkedLocations && userMarkedLocations.length > 0
+            ? userMarkedLocations.map((obj) => obj.title).join(", ")
             : "None"}
         </div>
         <button onClick={handleSend} disabled={loading}>

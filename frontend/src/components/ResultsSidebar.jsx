@@ -1,31 +1,35 @@
 import React, { useContext, useState } from "react";
 import { MapContext } from "../context/MapContext";
+import { AppContext } from "../context/AppContext";
 import styles from "./ResultsSidebar.module.css";
 
 const ResultsSidebar = ({ onClose }) => {
   const {
-    searchResults,
     setMapCenter,
-    setSearchResults,
-    agentMapResults,
-    setAgentMapResults
+    selectedChatMarkers,
+    // setSelectedChatMarkers,
+    applySearchResultsToMap
   } = useContext(MapContext);
 
-  const [resultType, setResultType] = useState("searchResult");
+  const { searchResults, setSearchResults } = useContext(AppContext);
 
-  if ((!Array.isArray(searchResults) || searchResults.length === 0) && (!Array.isArray(agentMapResults) || agentMapResults.length === 0)) return null;
+  const [resultType, setResultType] = useState("search");
+
 
   const removeResult = (idx) => {
     if (!Array.isArray(searchResults)) return;
     const updatedResults = [...searchResults];
     updatedResults.splice(idx, 1);
     setSearchResults(updatedResults);
+    applySearchResultsToMap(updatedResults);
   };
 
   return (
     <div className={styles.resultSideBar}>
+      <div className={styles.resultBarHeader}>
       <p>Search Results</p>
       <button onClick={onClose}>✖️</button>
+      </div>
       <div className={styles.resultType}>
         <label>
           <input
@@ -47,43 +51,43 @@ const ResultsSidebar = ({ onClose }) => {
       <ul style={{ listStyle: "none", padding: 0 }}>
         {resultType === "search"
           ? searchResults?.map((result, idx) => (
-              <li key={idx} className={styles.resultLIstElement}>
-                <div
-                  onClick={() =>
-                    setMapCenter({ lat: result.lat, lng: result.lng })
-                  }
-                >
-                  <strong>{result.source}</strong>: {result.address}
-                </div>
-                <button
-                  onClick={() => removeResult(idx)}
-                  className={styles.resultLIstElementCloseBtn}
-                >
-                  ❌ Remove
-                </button>
-              </li>
-            ))
-          : agentMapResults?.map((result, idx) => (
-              <li key={idx} className={styles.resultLIstElement}>
-                <div
-                  onClick={() =>
-                    setMapCenter({ lat: result.lat, lng: result.lng })
-                  }
-                >
-                  <strong>{result.source}</strong>: {result.address}
-                </div>
-                <button
-                  onClick={() => {
-                    const updatedResults = [...agentMapResults];
-                    updatedResults.splice(idx, 1);
-                    setAgentMapResults(updatedResults);
-                  }}
-                  className={styles.resultLIstElementCloseBtn}
-                >
-                  ❌ Remove
-                </button>
-              </li>
-            ))}
+            <li key={idx} className={styles.resultLIstElement}>
+              <div
+                onClick={() =>
+                  setMapCenter({ lat: result.lat, lng: result.lng })
+                }
+              >
+                <strong>{result.source}</strong>: {result.address}
+              </div>
+              <button
+                onClick={() => removeResult(idx)}
+                className={styles.resultLIstElementCloseBtn}
+              >
+                ❌
+              </button>
+            </li>
+          ))
+          : selectedChatMarkers?.map((result, idx) => (
+            <li key={idx} className={styles.resultLIstElement}>
+              <div
+                onClick={() =>
+                  setMapCenter({ lat: result.lat, lng: result.lng })
+                }
+              >
+                <strong>{result.source}</strong>: {result.address}
+              </div>
+              {/* <button
+                onClick={() => {
+                  const updatedResults = [...selectedChatMarkers];
+                  updatedResults.splice(idx, 1);
+                  setSelectedChatMarkers(updatedResults);
+                }}
+                className={styles.resultLIstElementCloseBtn}
+              >
+                ❌
+              </button> */}
+            </li>
+          ))}
       </ul>
     </div>
   );

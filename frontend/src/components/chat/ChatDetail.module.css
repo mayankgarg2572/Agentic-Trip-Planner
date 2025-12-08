@@ -63,6 +63,7 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 13px;
+    transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
 .actionButton:hover {
@@ -72,4 +73,9 @@
 .actionButton:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+.actionButton:active {
+   transform: translateX(4px); /* slight slide */
+   background-color: #0056b3;  /* optional darker color */
 }

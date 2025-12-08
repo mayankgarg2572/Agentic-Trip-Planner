@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext} from 'react';
 import { AppContext } from '../../context/AppContext';
 import { MapContext } from '../../context/MapContext';
 import classes from './ChatDetail.module.css';
@@ -23,7 +23,8 @@ const ChatDetail = () => {
     closeChat();
   };
 
-  const handleShowItinerary = () => {
+  const handleShowItinerary = (e) => {
+    e.preventDefault()
     if (itinerary && markers) {
       loadChatIntoMap(itinerary, markers);
     }
@@ -57,11 +58,11 @@ const ChatDetail = () => {
           className={classes.actionButton}
           disabled={!itinerary}
         >
-          Show Itinerary on Map
+          Show Itinerary
         </button>
-        <button className={classes.actionButton}>
+        {/* <button className={classes.actionButton}>
           Show Expenses
-        </button>
+        </button> */}
       </div>
     </div>
   );

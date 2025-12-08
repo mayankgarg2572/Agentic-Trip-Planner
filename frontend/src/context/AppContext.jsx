@@ -51,7 +51,8 @@ export const AppProvider = ({ children }) => {
 ]);
 
     // 3. Set current index to this new chat
-    // setCurSelectedPromptInd(promptsChatResArr.length);
+    setCurSelectedPromptInd(promptsChatResArr.length);
+    setActiveMobileTab("chat")
   };
 
   const failedNewPrompt = (promptText, err) => {

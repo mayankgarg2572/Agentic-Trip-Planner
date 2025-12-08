@@ -30,6 +30,19 @@ const BottomSheet = () => {
     }
   };
 
+  const handleTabCLick = (e, tab) => {
+      e.stopPropagation(); 
+      if(activeMobileTab === tab){
+        setIsExpanded(false)
+        setActiveMobileTab(null); 
+      }
+      else{
+        setActiveMobileTab(tab); 
+        setIsExpanded(true); 
+      }
+
+  }
+
   return (
     <div className={`${classes.bottomSheet} ${isExpanded ? classes.expanded : ''}`}>
       {/* Drag Handle / Header */}
@@ -49,19 +62,19 @@ const BottomSheet = () => {
       <div className={classes.tabsBar}>
         <button
           className={activeMobileTab === 'results' ? classes.activeTab : ''}
-          onClick={(e) => { e.stopPropagation(); setActiveMobileTab('results'); setIsExpanded(true); }}
+          onClick={(e) => { handleTabCLick(e, 'results') }}
         >
           Results
         </button>
         <button
           className={activeMobileTab === 'chat' ? classes.activeTab : ''}
-          onClick={(e) => { e.stopPropagation(); setActiveMobileTab('chat'); setIsExpanded(true); }}
+          onClick={(e) => { handleTabCLick(e, 'chat'); }}
         >
           Chat
         </button>
         <button
           className={activeMobileTab === 'plan' ? classes.activeTab : ''}
-          onClick={(e) => { e.stopPropagation(); setActiveMobileTab('plan'); setIsExpanded(true); }}
+          onClick={(e) => { handleTabCLick(e, 'plan'); }}
         >
           Plan
         </button>

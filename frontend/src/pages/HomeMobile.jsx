@@ -6,9 +6,8 @@ import classes from "./Home.module.css";
 
 const HomeMobile = () => {
     return (
-        <div className={classes.container} style={{ flexDirection: 'column' }}>
-            {/* 1. Search Bar & Map Section */}
-            <div className={classes.mapSection} style={{ height: '100%' }}>
+        <div className={classes.container}>
+            <div className={classes.mapSection}>
                 <CustomSearchBar />
                 <MapView />
             </div>

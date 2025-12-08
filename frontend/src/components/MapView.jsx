@@ -79,9 +79,9 @@ const MapView = () => {
       const fetchIPLocation = async () => {
         try {
           const data = await api.getLatLongForIP();
-          console.log(data)
+          // console.log(data)
           if (data.lat && data.lon) {
-            console.log(data)
+            // console.log(data)
             setMapCenter({ lat: data.lat, lng: data.lon });
           }
           else if (data.latitude && data.longitude) {

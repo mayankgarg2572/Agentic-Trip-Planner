@@ -55,7 +55,7 @@ class VerificationNode:
             # "STATE (JSON):\n"
             # f"{state_json}\n"
             "You are a Verification Agent.\n"
-            "Task: Decide if the RESPONSE inside STATE is acceptable for a UI.\n"
+            "Task: Decide if the chat_response inside STATE is acceptable for a UI.\n"
             "Judge only: (1) UI helpful, (2) friendly tone. Do NOT deeply fact-check.\n"
             "Return EXACTLY one line of JSON like:\n"
             '{"verdict":"verified|not_verified","fix_code":"none|repair_format|rewrite_response|tone_polish",'

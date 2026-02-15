@@ -13,3 +13,4 @@ agent-backend/agentenv
 NextTarget.txt
 
 .agent
+.venv

@@ -1,11 +1,12 @@
 import axios from "axios";
 
-import { SEARCH_API_BASE, AGENTIC_API_BASE, AGENTIC_API_STATUS, SEARCH_API_BASE_STATUS } from "./config";
+import { REACT_APP_SEARCH_API_BASE, REACT_APP_AGENTIC_API_BASE, REACT_APP_AGENTIC_API_STATUS, REACT_APP_SEARCH_API_BASE_STATUS } from "./config";
 
 const api = {
   startServer: async () => {
     try{
-      const agentResponse =  await axios.get(`${AGENTIC_API_STATUS}/`)
+      console.log("Agentic API Status:", REACT_APP_AGENTIC_API_STATUS)
+      const agentResponse =  await axios.get(`${REACT_APP_AGENTIC_API_STATUS}/`)
       console.log("Agent status:", agentResponse.data)
     }
     catch(error){
@@ -14,7 +15,8 @@ const api = {
     }
 
     try{
-      const searchResponse = await axios.get(`${SEARCH_API_BASE_STATUS}`)
+      console.log("Search API Base:", REACT_APP_SEARCH_API_BASE)
+      const searchResponse = await axios.get(`${REACT_APP_SEARCH_API_BASE_STATUS}`)
       console.log("Search status:", searchResponse.data)
     }
     catch(err){
@@ -23,7 +25,8 @@ const api = {
   },
   searchLocation: async (address) => {
     try {
-      const response = await axios.post(`${SEARCH_API_BASE}/search-location`, {
+      console.log("Search API Base:", REACT_APP_SEARCH_API_BASE)
+      const response = await axios.post(`${REACT_APP_SEARCH_API_BASE}/search-location`, {
         address,
       });
       return response.data;
@@ -35,7 +38,8 @@ const api = {
 
   saveMarkerLocation: async (latitude, longitude) => {
     try {
-      const response = await axios.post(`${SEARCH_API_BASE}/save-marker-location`, {
+      console.log("Search API Base:", REACT_APP_SEARCH_API_BASE)
+      const response = await axios.post(`${REACT_APP_SEARCH_API_BASE}/save-marker-location`, {
         latitude,
         longitude,
       });
@@ -48,7 +52,8 @@ const api = {
 
   getItinerary: async (reqObj) => {
     try {
-      const response = await axios.post(`${AGENTIC_API_BASE}/chat`, reqObj);
+      console.log("Agentic API Base:", REACT_APP_AGENTIC_API_BASE)
+      const response = await axios.post(`${REACT_APP_AGENTIC_API_BASE}/chat`, reqObj);
       return response.data;
     } catch (error) {
       console.error("Error in getItinerary:", error);
@@ -58,8 +63,9 @@ const api = {
 
   searchLocationMultiple: async (address) => {
     try {
+      console.log("Search API Base:", REACT_APP_SEARCH_API_BASE)
       const response = await axios.post(
-        `${SEARCH_API_BASE}/search-location-multiple`,
+        `${REACT_APP_SEARCH_API_BASE}/search-location-multiple`,
         { address }
       );
       return response.data;
@@ -71,6 +77,7 @@ const api = {
 
   getLatLongForIP: async () => {
     try {
+      console.log("Search API Base:", REACT_APP_SEARCH_API_BASE)
       const res  = await axios.get("https://ipapi.co/json/") // Can use http://ip-api.co/json/ but this is not easy for deploying as it is not https.
       
       return res.data

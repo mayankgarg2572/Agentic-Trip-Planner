@@ -108,6 +108,6 @@ class RotatingGemini(BaseChatModel):
 # ───────────────────────────────────────────────────────────────────────────────
 # Public symbols – names unchanged, rest of repo keeps working
 # ───────────────────────────────────────────────────────────────────────────────
-MAIN_LLM   = RotatingGemini(model_name = "gemini-2.0-flash")
+MAIN_LLM   = RotatingGemini(model_name = "gemini-2.5-flash")
 
-SUPPORTIVE_LLM  = RotatingGemini(model_name = "gemini-1.5-flash")
+SUPPORTIVE_LLM  = RotatingGemini(model_name = "gemini-2.5-flash")
